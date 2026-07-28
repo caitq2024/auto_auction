@@ -40,6 +40,12 @@ spends budget faster and can violate your CPA (cost-per-acquisition) target; \
 score is conversions, penalized by (target_cpa/actual_cpa)^2 when \
 actual_cpa > target_cpa. Budget must last all 48 steps.
 
+Scale hint: predicted conversion probabilities are tiny (mean around \
+`traffic.current_pvalue_mean`, typically 1e-4 to 1e-3) while winning market \
+prices are around 0.1-1.0 per impression, so competitive alpha values are \
+typically in the tens to low hundreds. Watch `market.recent_win_rate`: if it \
+stays 0 your alpha is too low to win anything.
+
 Respond with ONLY a JSON object:
 {"action": "set_alpha", "alpha": <number>, "confidence": <0..1>, \
 "reason_code": "<SHORT_UPPER_SNAKE_REASON>"}"""
@@ -149,12 +155,7 @@ class LLMBidAgent:
         return f"{SYSTEM_PROMPT}\n\nCurrent state:\n{json.dumps(obs)}"
 
     def _parse_and_validate(self, raw: str) -> float | None:
-        text = raw.strip()
-        if text.startswith("```"):
-            text = text.strip("`\n")
-            if text.startswith("json"):
-                text = text[4:]
-        data = json.loads(text)
+        data = json.loads(self._extract_first_json_object(raw))
         if not isinstance(data, dict) or data.get("action") != "set_alpha":
             return None
         alpha = data.get("alpha")
@@ -163,6 +164,35 @@ class LLMBidAgent:
         if math.isnan(alpha) or math.isinf(alpha):
             return None
         return float(alpha)
+
+    @staticmethod
+    def _extract_first_json_object(raw: str) -> str:
+        """Return the first balanced {...} block — models often wrap the JSON
+        in markdown fences or append prose after it."""
+        start = raw.find("{")
+        if start < 0:
+            raise ValueError("no JSON object in model output")
+        depth = 0
+        in_str = False
+        escape = False
+        for i in range(start, len(raw)):
+            ch = raw[i]
+            if in_str:
+                if escape:
+                    escape = False
+                elif ch == "\\":
+                    escape = True
+                elif ch == '"':
+                    in_str = False
+            elif ch == '"':
+                in_str = True
+            elif ch == "{":
+                depth += 1
+            elif ch == "}":
+                depth -= 1
+                if depth == 0:
+                    return raw[start : i + 1]
+        raise ValueError("unbalanced JSON object in model output")
 
     def _fallback(self, tick: int, remaining_budget: float) -> tuple[float, str]:
         if self.last_alpha is not None:

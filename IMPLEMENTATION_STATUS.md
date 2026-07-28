@@ -15,7 +15,8 @@
 - [x] **DT 基线全链路**：自产 50k×4ep 数据 → upstream DT 训练（CPU 179s）→ DtAgent 接入 → 三方对比 outputs/compare_dt_v1（详见 IMPLEMENTATION_DETAILS §4.2）
 - [x] **LLM bid agent**：结构化 action + 校验 + clip + 三级 fallback + 轨迹记录，MockLLMClient 测试 8 个全过；接真实模型只需一个 (prompt)->str callable（§4.3）
 - 测试总数 32，全过
-- 下一步：接真实 LLM client（Claude API / p5 vLLM）跑 prompt-only 基线 → rollout collector + SFT 导出 → 500k 数据训 DT（p5）
+- [x] **LLM prompt-only 基线跑通**（Bedrock haiku，50k PV×2ep）：fallback 0%，best episode score 1.70（2 转化、CPA 108.6），轨迹 JSONL 已导出；三轮迭代教训见 IMPLEMENTATION_DETAILS §4.4
+- 下一步：更强教师模型对比（sonnet/opus）→ rollout collector 批量化 + SFT 导出 → 500k 数据训 DT（p5 GPU）→ GRPO
 
 以下为第一轮（Phase 0）记录：
 

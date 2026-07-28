@@ -134,7 +134,25 @@ src/adsim/
 - **轨迹**：每次调用记录 prompt、原始输出、解析结果、实际执行 alpha、fallback 原因、延迟——`LLMCallRecord` 列表即 SFT/GRPO 导出的原料。
 - **client 可插拔**：任何 `(prompt: str) -> str` callable。测试用 `MockLLMClient`；接真模型时（Claude API 或 p5 上的 vLLM）只需实现同签名，无需改 agent。
 
-## 5. 测试清单（32+2 个，全过）
+## 4.4 LLM prompt-only 基线（Bedrock，第一个真实 LLM 竞价实验）
+
+模型：`us.anthropic.claude-haiku-4-5`（Bedrock Converse API，注意必须用 `us.` inference profile 前缀，裸 model id 会报 on-demand 不支持）。50k PV × 2 episodes，LLM 占 slot 0（budget 2900 / tCPA 100），48 次调用/episode。
+
+三轮迭代（完整轨迹 JSONL 在各输出目录）：
+
+| 版本 | 问题/改动 | 结果 |
+|---|---|---|
+| v1 | JSON 解析只剥 markdown 围栏，模型在 JSON 后附加分析文字 → `Extra data` 解析全败 | fallback 100%，全程 PID 保底 alpha=15，0 转化 |
+| v2 | 解析器改为提取首个平衡 `{...}` 块；prompt 加尺度提示（pValue ~1e-4、市场价 ~0.1-1、合理 alpha 数十到数百） | fallback 0%；ep0 拿到 1 转化 / score 0.36，但 alpha 顶到 200 clip 上限，预算只花 6% |
+| v3 | `max_alpha` 200 → 2000（同市场 PID 的 alpha 会到 ~1200，200 的 clip 是人为瓶颈） | **ep0: 2 转化, CPA 108.6 vs 目标 100, score 1.70**；ep1: 1 转化, score 0.13 |
+
+成本/延迟（haiku）：约 4s/决策、每 episode 48 调用 ≈ 530 input + 300 output tokens/调用；2 episodes 总计约 51k in / 29k out tokens。
+
+结论：管道验证完成——结构化输出、校验、fallback、轨迹导出全部工作。haiku prompt-only 还远弱于 PID（3.23）/DT（1.59）同场景均值，但这在预期内：它没有历史数据可学，靠 prompt 里的市场统计冷启动。下一步研究议题（非工程）：更强教师模型（sonnet/opus）、few-shot 市场先验、observation 里加多 tick 趋势、蒸馏。
+
+**给复盘的关键教训**：(1) LLM 输出解析必须按"首个平衡 JSON 块"提取，不能假设 clean JSON；(2) action bounds 是实验参数不是安全常数——clip 上限低于市场竞争水平会静默阉割策略；(3) 尺度提示（pValue/市场价的量级）对 LLM 在这种非常识数值环境里的表现是决定性的。
+
+## 5. 测试清单（32 个，全过）
 
 - `tests/unit/test_gsp.py`（8）：文档 15.1 手算例、reserve floor、无赢不扣费、未曝光无转化、提价不降名次、GSP 价 ≤ 自身 bid、slot ∈ {0..3}
 - `tests/unit/test_rng_and_budget.py`（7）：同/异 seed、tick/module/episode 流独立、legacy 复刻、两种超支模式不超预算
