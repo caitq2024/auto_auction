@@ -152,6 +152,30 @@ src/adsim/
 
 **给复盘的关键教训**：(1) LLM 输出解析必须按"首个平衡 JSON 块"提取，不能假设 clean JSON；(2) action bounds 是实验参数不是安全常数——clip 上限低于市场竞争水平会静默阉割策略；(3) 尺度提示（pValue/市场价的量级）对 LLM 在这种非常识数值环境里的表现是决定性的。
 
+## 4.5 教师模型对比 + 500k DT + SFT 导出（第三段开发）
+
+### Opus 4.8 vs Haiku 4.5（prompt-only，50k PV × 2ep，同 seed 配对）
+
+| 模型 | ep0 score | ep1 score | 转化合计 | 预算利用 | 延迟/决策 | 踩坑 |
+|---|---|---|---|---|---|---|
+| haiku 4.5 | 1.70 | 0.13 | 3 | 7-9% | ~4s | — |
+| opus 4.8 | 0.38 | 0.03 | 3 | 16-19% | 5-6.4s | ① 新模型拒绝 temperature 参数（ValidationException）；② Bedrock 容量错误需指数退避重试 |
+
+注意：opus 花钱更多但 CPA 更差（230/558 vs haiku 最好一集 108.6），单从这 2 episodes 还不能下"谁是更好教师"的结论——样本太少且 haiku 的 ep0 有运气成分。正式教师选型需要 ≥10 episodes × 多 seed。BedrockClient 现已支持两代模型 + 容量重试（`llm_clients.py`）。
+
+### 500k 数据 + 20k 步 DT
+
+- 数据：500k PV × 4 episodes 自产 log（~15GB CSV，生成 55 分钟）；
+- 训练：20000 步 CPU 仅 607s，loss 4830（50k 版）→ 115（500k 版）；
+- **500k 全规模三方对比**（`outputs/compare_fullscale_v2/`）：IQL 17.78 > PID 6.15 > **DT-500k 2.23**（12 转化、预算 100% 用满、CPA 超标 149%）。
+- 解读：DT 学的是"模仿数据里的行为并 conditioned on return"，而数据全部来自 PID 主导的市场，它模仿到了"花完预算"但没学到 IQL 那种"CPA 控制"。要超越 PID 需要更好的 return conditioning/数据多样性——这是后续研究题，不是工程缺陷。p5 GPU 对这个小 DT 暂非必需（CPU 10 分钟），先留给未来 8B 蒸馏/GRPO。
+
+### SFT 数据管道（training/rollout.py）
+
+- `collect_rollouts`：任意 observation-driven agent 批量跑标准市场，轨迹落 JSON；
+- `export_sft`：轨迹 → chat 格式 JSONL（user=完整 prompt，assistant=干净的 action JSON，不含教师 prose），带 min_score 过滤和 fallback 剔除；
+- 首批 177 条教师样本已导出（`outputs/sft/teacher_v1.jsonl`，haiku+opus 混合）。
+
 ## 5. 测试清单（32 个，全过）
 
 - `tests/unit/test_gsp.py`（8）：文档 15.1 手算例、reserve floor、无赢不扣费、未曝光无转化、提价不降名次、GSP 价 ≤ 自身 bid、slot ∈ {0..3}

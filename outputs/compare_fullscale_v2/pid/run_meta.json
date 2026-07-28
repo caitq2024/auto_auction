@@ -1,0 +1,11 @@
+{
+  "scenario_id": "compare_pid",
+  "seed": 1,
+  "episodes": 2,
+  "wall_time_sec": [
+    37.87,
+    34.1
+  ],
+  "internal_commit": "82139b6477de32aca0994180d0602da5bea6d4bc",
+  "candidate": "pid"
+}

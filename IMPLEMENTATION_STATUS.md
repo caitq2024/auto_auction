@@ -16,7 +16,11 @@
 - [x] **LLM bid agent**：结构化 action + 校验 + clip + 三级 fallback + 轨迹记录，MockLLMClient 测试 8 个全过；接真实模型只需一个 (prompt)->str callable（§4.3）
 - 测试总数 32，全过
 - [x] **LLM prompt-only 基线跑通**（Bedrock haiku，50k PV×2ep）：fallback 0%，best episode score 1.70（2 转化、CPA 108.6），轨迹 JSONL 已导出；三轮迭代教训见 IMPLEMENTATION_DETAILS §4.4
-- 下一步：更强教师模型对比（sonnet/opus）→ rollout collector 批量化 + SFT 导出 → 500k 数据训 DT（p5 GPU）→ GRPO
+- [x] **Opus 4.8 教师基线**（修复 temperature 拒绝 + 容量重试）：2ep 内不优于 haiku，正式教师选型需 ≥10 ep 多 seed（DETAILS §4.5）
+- [x] **500k 数据（15GB 自产）+ 20k 步 DT**：500k 全规模榜 IQL 17.78 > PID 6.15 > DT 2.23
+- [x] **SFT 管道**：rollout collector + chat JSONL 导出，首批 177 条教师样本
+- [x] **Demo 方案草案**：docs/demo_design.md（推荐静态快照 SPA，对齐 aifl-dashboard 模式，待用户选型）
+- 下一步：教师选型扩样（≥10ep×多seed）→ demo 形态确认后实现 → GitHub 同步（https://github.com/caitq2024/auto_auction，待凭证）→ GRPO
 
 以下为第一轮（Phase 0）记录：
 
