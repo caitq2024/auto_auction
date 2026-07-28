@@ -105,11 +105,41 @@ src/adsim/
 
 结论：全规模下排序反转——IQL 用 65% 预算拿到相近转化并把 CPA 压在约束线上（score 不被惩罚），PID 烧完预算但 CPA 超标 72%（score 被 (100/172)² ≈ 0.34 惩罚）。这与竞赛的预期行为一致，验证了：(a) 平台机制正确；(b) **任何策略对比结论必须声明 PV 规模**；(c) 竞赛评分对 CPA 违约的平方惩罚是排序的主导项。
 
-## 5. 测试清单（24 个，全过）
+## 4.2 Decision Transformer 基线（第二段开发）
+
+数据→训练→评估全链路已打通，全部使用自产数据（零下载）：
+
+1. **数据**：`smoke_test_auctionnet_online.py --generate-log`，50k PV × 4 episodes → 4 × ~380MB 原始 log CSV。
+2. **转换**：upstream `TrainDataGenerator`（log → 16 维状态的 tick 级轨迹，每个 (episode, advertiser) 一条 48 步轨迹，共 192 条）。
+3. **训练**：`scripts/train_dt_baseline.py`（py39 env，upstream DT 代码作库使用，Apache-2.0）。5000 步 × batch 32，CPU 上 179 秒。模型/normalize_dict 存 `outputs/dt_baseline/saved_model/DTtest/`（不写入 upstream 目录）。
+4. **推理接入**：`src/adsim/agents/dt.py`（`DtAgent`，registry 名 `"dt"`）。16 维状态构造逐项复刻 upstream `DtBiddingStrategy`；upstream dt.py 可直接在 py311/torch2.13 下 import。
+   - 踩坑 1：`load_net` 收文件路径不是目录（与 `save_net` 不对称）；
+   - 踩坑 2：`take_actions` 返回 shape (1,) 数组，numpy≥2 禁止对其 `float()`，需 `.reshape(-1)[0]`。
+5. **对比**（50k PV × 4 ep，seed 1，`outputs/compare_dt_v1/`）：
+
+| 策略 | score_mean | conversions | budget_util |
+|---|---|---|---|
+| pid | 3.23 | 10.75 | 95% |
+| **dt（自训 5k 步）** | **1.59** | **9.5** | **100%** |
+| upstream:iql | 1.00 | 1.0 | 2% |
+
+解读：DT 在与训练数据同规模（50k PV）的市场上行为合理（转化量接近 PID、预算用满），5000 步 CPU 快训还打不过 PID 但显著好于分布不匹配的 IQL checkpoint。这是"能训练、能接入、能评估"的验证，不是调优后的结论；正式 DT 基线要用 500k PV 数据 + 更多 episodes + p5 GPU 训练。
+
+## 4.3 LLM Bid Agent（第二段开发）
+
+`src/adsim/agents/llm.py`，按文档 §11 实现，8 个单测覆盖安全管道：
+
+- **协议**：每 tick 一次调用，输入 = SYSTEM_PROMPT + AgentObservation JSON（runner 通过 `observe()` hook 在出价前注入，见 runner.py），要求输出 `{"action":"set_alpha","alpha":...,"confidence":...,"reason_code":...}`。
+- **安全管道**（全部在 agent 层，绝不进 auction core）：JSON 解析（容忍 markdown 代码块）→ schema/类型校验 → NaN/Inf 拒绝 → clip 到 [min_alpha, max_alpha]（默认 [0,200]）→ 失败时 fallback 链 **previous valid alpha → 内部 PID → safe fixed alpha(15)**。
+- **轨迹**：每次调用记录 prompt、原始输出、解析结果、实际执行 alpha、fallback 原因、延迟——`LLMCallRecord` 列表即 SFT/GRPO 导出的原料。
+- **client 可插拔**：任何 `(prompt: str) -> str` callable。测试用 `MockLLMClient`；接真模型时（Claude API 或 p5 上的 vLLM）只需实现同签名，无需改 agent。
+
+## 5. 测试清单（32+2 个，全过）
 
 - `tests/unit/test_gsp.py`（8）：文档 15.1 手算例、reserve floor、无赢不扣费、未曝光无转化、提价不降名次、GSP 价 ≤ 自身 bid、slot ∈ {0..3}
 - `tests/unit/test_rng_and_budget.py`（7）：同/异 seed、tick/module/episode 流独立、legacy 复刻、两种超支模式不超预算
 - `tests/unit/test_threshold_replay.py`（5）：零 alpha、全赢成本、预算约束、同 seed 确定、expected < wins
+- `tests/unit/test_llm_agent.py`（8）：合法 JSON 执行、markdown 包裹容忍、clip、NaN/Inf 拒绝→PID fallback、垃圾输出→previous fallback、client 异常处理、轨迹完整性、错误 action 类型拒绝
 - `tests/parity/test_upstream_parity.py`（3）：见第 3 节
 - `tests/integration/test_runner_determinism.py`（2）：同 seed 端到端一致、异 seed 变化
 

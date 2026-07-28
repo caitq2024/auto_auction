@@ -97,6 +97,13 @@ class EpisodeRunner:
             for i, agent in enumerate(self.agents):
                 if remaining[i] < sc.min_remaining_budget:
                     continue
+                if hasattr(agent, "observe"):
+                    # observation-driven agents (LLM) get the aggregated
+                    # pre-bid state; history stats cover ticks < current
+                    agent.observe(self._build_observation(
+                        i, tick, batch, remaining[i], cum_cost[i], cum_conv[i],
+                        won_hist or [np.zeros(sc.num_agent)], lwc_means or [0.0],
+                    ))
                 bids[:, i] = agent.bidding(
                     tick,
                     batch.pv_values[:, i],

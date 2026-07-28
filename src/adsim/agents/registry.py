@@ -167,6 +167,10 @@ def build_agent(strategy: str, kwargs: dict[str, Any]) -> BidAgent:
         return FixedAlphaAgent(**kwargs)
     if strategy == "pid":
         return PidAgent(**kwargs)
+    if strategy == "dt":
+        from adsim.agents.dt import DtAgent
+
+        return DtAgent(**kwargs)
     if strategy.startswith("upstream:"):
         return UpstreamAgentAdapter(strategy.split(":", 1)[1], **kwargs)
     raise KeyError(f"unknown strategy: {strategy}")

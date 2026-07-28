@@ -1,0 +1,13 @@
+{
+  "scenario_id": "compare_upstream_iql",
+  "seed": 1,
+  "episodes": 4,
+  "wall_time_sec": [
+    6.69,
+    6.14,
+    6.26,
+    6.16
+  ],
+  "internal_commit": "71993b1f87016f02f5b12b4f7a29b92b24446858",
+  "candidate": "upstream_iql"
+}

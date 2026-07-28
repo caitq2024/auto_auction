@@ -11,8 +11,11 @@
 - [x] 24 个测试全过；parity：legacy 模式下 PID 5k PV 与 Phase 0 锚点 conversions 精确相等、cost 差 <1、win_pv 差 <2%
 - [x] 首个对比实验 outputs/compare_v1（4 策略 × 4 episodes，20k PV）
 - 详细实现记录：**docs/IMPLEMENTATION_DETAILS.md**（复盘入口）
-- [ ] 500k PV 正式锚点（运行中）
-- 下一步：DT 基线训练 → LLM agent adapter（observation serializer 已就绪）
+- [x] 500k PV 全规模对比：IQL score 17.78 > PID 6.15（排序与 20k PV 相反，CPA 惩罚主导），outputs/compare_fullscale_v1
+- [x] **DT 基线全链路**：自产 50k×4ep 数据 → upstream DT 训练（CPU 179s）→ DtAgent 接入 → 三方对比 outputs/compare_dt_v1（详见 IMPLEMENTATION_DETAILS §4.2）
+- [x] **LLM bid agent**：结构化 action + 校验 + clip + 三级 fallback + 轨迹记录，MockLLMClient 测试 8 个全过；接真实模型只需一个 (prompt)->str callable（§4.3）
+- 测试总数 32，全过
+- 下一步：接真实 LLM client（Claude API / p5 vLLM）跑 prompt-only 基线 → rollout collector + SFT 导出 → 500k 数据训 DT（p5）
 
 以下为第一轮（Phase 0）记录：
 
