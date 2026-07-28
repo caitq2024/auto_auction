@@ -20,7 +20,8 @@
 - [x] **500k 数据（15GB 自产）+ 20k 步 DT**：500k 全规模榜 IQL 17.78 > PID 6.15 > DT 2.23
 - [x] **SFT 管道**：rollout collector + chat JSONL 导出，首批 177 条教师样本
 - [x] **Demo 方案草案**：docs/demo_design.md（推荐静态快照 SPA，对齐 aifl-dashboard 模式，待用户选型）
-- 下一步：教师选型扩样（≥10ep×多seed）→ demo 形态确认后实现 → GitHub 同步（https://github.com/caitq2024/auto_auction，待凭证）→ GRPO
+- [x] **Demo 方案 A 完成**（`demo/`）：export_demo.py 聚合 → 静态 SPA（排行榜 + 48-tick 回放 + LLM 决策透视），React 19 + Vite 与 agentic_advertising/web-tool 同栈，playwright 验证通过。未来整目录拷贝进 aifl-dashboard/tools/
+- 下一步：教师选型扩样（≥10ep×多seed）→ demo 迁移 aifl-dashboard/tools/ → GitHub 同步（https://github.com/caitq2024/auto_auction，待凭证）→ GRPO
 
 以下为第一轮（Phase 0）记录：
 
