@@ -29,6 +29,9 @@ mypy_path = "src"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 
+[project.scripts]
+adsim = "adsim.cli.main:main"
+
 [build-system]
 requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"

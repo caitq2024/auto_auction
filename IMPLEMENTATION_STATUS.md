@@ -1,6 +1,20 @@
 # IMPLEMENTATION_STATUS
 
-更新：2026-07-28
+更新：2026-07-28（第二轮：Phase 1 核心完成）
+
+## Phase 1 第一轮（本轮）
+
+- [x] T02 核心数据结构 / T03 RngManager（strict+legacy）/ T04 GSP core / T05 budget control（sequential_stop + random_drop_legacy）
+- [x] T06 ScenarioConfig（upstream 48-agent 市场配置化）/ T07 upstream 策略 adapter（TorchScript 在 py311/torch2.13 直接加载，已验证）
+- [x] T08 EpisodeRunner（多受控 agent + 每 tick observation）+ Event Ledger（parquet）
+- [x] T09 Threshold Replay（clean-room，双转化口径）/ T11 配对对比 + bootstrap CI + markdown 报告 + `adsim` CLI
+- [x] 24 个测试全过；parity：legacy 模式下 PID 5k PV 与 Phase 0 锚点 conversions 精确相等、cost 差 <1、win_pv 差 <2%
+- [x] 首个对比实验 outputs/compare_v1（4 策略 × 4 episodes，20k PV）
+- 详细实现记录：**docs/IMPLEMENTATION_DETAILS.md**（复盘入口）
+- [ ] 500k PV 正式锚点（运行中）
+- 下一步：DT 基线训练 → LLM agent adapter（observation serializer 已就绪）
+
+以下为第一轮（Phase 0）记录：
 
 ## 已完成
 

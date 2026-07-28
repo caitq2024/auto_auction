@@ -1,0 +1,13 @@
+{
+  "scenario_id": "compare_fixed_alpha_alpha120.0",
+  "seed": 1,
+  "episodes": 4,
+  "wall_time_sec": [
+    4.77,
+    4.41,
+    4.36,
+    4.32
+  ],
+  "internal_commit": "b5e4aab5b300e821f765738198406ce629206f1a",
+  "candidate": "fixed_alpha_alpha120.0"
+}
