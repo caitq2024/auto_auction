@@ -92,7 +92,18 @@ src/adsim/
 | 1 | pid | 0.861 | 6.25 | 94% |
 | 2-4 | fixed_alpha(120) / iql / td3_bc | 0.0 | 0 | <0.5% |
 
-解读：与 Phase 0 审计结论一致——RL checkpoint 和 fixed alpha 是按 500k PV 市场校准的，20k PV 下市场价格结构完全不同，出价过低几乎不赢。**结论仅对 20k PV 场景成立**；正式对比要在 500k PV 下跑（约 40s/episode/策略，完全可行，只是这轮先验证机制）。产出：`comparison_report.md` + 每策略的 parquet 明细。
+解读：与 Phase 0 审计结论一致——RL checkpoint 和 fixed alpha 是按 500k PV 市场校准的，20k PV 下市场价格结构完全不同，出价过低几乎不赢。**结论仅对 20k PV 场景成立**。产出：`comparison_report.md` + 每策略的 parquet 明细。
+
+### 4.1 500k PV 全规模对比（outputs/compare_fullscale_v1/）
+
+`adsim compare --candidates pid upstream:iql --pv-num 500000 --episodes 2 --seed 1`（单 episode 单策略约 5–6 分钟，16 核 CPU）：
+
+| 策略 | score_mean | conversions | actual CPA | CPA violation | budget_util | paired win vs pid |
+|---|---|---|---|---|---|---|
+| upstream:iql | **17.78** | 18.5 | 100.5 | +1.3% | 64.8% | 2/2 |
+| pid | 6.15 | 17.0 | 172.4 | +72.4% | 99.6% | — |
+
+结论：全规模下排序反转——IQL 用 65% 预算拿到相近转化并把 CPA 压在约束线上（score 不被惩罚），PID 烧完预算但 CPA 超标 72%（score 被 (100/172)² ≈ 0.34 惩罚）。这与竞赛的预期行为一致，验证了：(a) 平台机制正确；(b) **任何策略对比结论必须声明 PV 规模**；(c) 竞赛评分对 CPA 违约的平方惩罚是排序的主导项。
 
 ## 5. 测试清单（24 个，全过）
 
@@ -104,7 +115,7 @@ src/adsim/
 
 ## 6. 已知问题与下一步
 
-1. **500k PV 正式锚点未跑**（PID+IQL，≥2 seeds，upstream 与内部 legacy 双侧）——下轮第一件事。
+1. ~~500k PV 正式对比未跑~~ 已完成（4.1 节）。upstream 侧同规模 legacy parity 锚点仍待补（需 upstream 跑 500k 约 45 分钟）。
 2. strict 模式的流量仍由 episode 决定（见 2.1），多样化流量要靠 episode_offset 或未来 Replay/Learned generator。
 3. `upstream:onlinelp` 依赖 `official_agent/onlineLpTest/episode-{i}.csv`，episode 大于文件数时会退化，adapter 未特殊处理（upstream 同样问题）。
 4. Event Ledger 目前是 tick 级 + observation JSON，PV 级明细（文档 8.5 全字段）留给 Exact Re-auction 需要时再加，避免 500k PV × 48 agent 的明细爆盘。
