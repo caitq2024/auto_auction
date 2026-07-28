@@ -1,0 +1,37 @@
+[project]
+name = "adsim"
+version = "0.0.1"
+description = "Internal ad auction & budget allocation research platform (AuctionNet-based)"
+requires-python = ">=3.11"
+dependencies = [
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "pyarrow>=14",
+    "pyyaml>=6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "hypothesis>=6",
+    "mypy>=1.8",
+    "ruff>=0.4",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src"]
+
+[tool.mypy]
+strict = true
+mypy_path = "src"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]

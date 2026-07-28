@@ -1,0 +1,28 @@
+{
+  "traffic": "/home/ec2-user/efs/agentic_bidding/auction-sim-platform/third_party/AuctionNet/data/log/0.csv",
+  "advertiser": 7,
+  "period": 0,
+  "seed": 7,
+  "python": "3.9.12",
+  "agent": {
+    "name": "PlayerStrategy",
+    "budget": 3500.0,
+    "cpa": 80.0
+  },
+  "key_used": [
+    0.0,
+    7.0
+  ],
+  "status": "ok",
+  "result": {
+    "num_timeStepIndex": 48,
+    "total_pv": 4973,
+    "reward_conversions": 0.0,
+    "cost": 1.2679657611602124,
+    "cpa_real": 12679657611.602123,
+    "cpa_constraint": 80.0,
+    "score": 0.0
+  },
+  "wall_time_sec": 0.15,
+  "max_rss_mb": 177.4
+}

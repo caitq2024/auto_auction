@@ -1,0 +1,58 @@
+{
+  "player": "pid",
+  "pv_num": 5000,
+  "num_episode": 1,
+  "player_index": 0,
+  "seed": 1,
+  "python": "3.9.12",
+  "extra_gin_bindings": [
+    "Controller.pv_num = 5000",
+    "run_test.num_episode = 1",
+    "run_test.generate_log = True"
+  ],
+  "status": "ok",
+  "result": {
+    "policyName": "PidBiddingStrategy_player",
+    "playerindex": 0,
+    "category": 0,
+    "rawData": [
+      {
+        "cpaConstraint": 100.0,
+        "budget": 2900.0,
+        "reward": "4",
+        "allCost": 2569.9983664428482,
+        "cpa": 642.4995915946496,
+        "targetValue": 400.0,
+        "allCompetePv": "4973",
+        "allWinPv": "949",
+        "win_pv_ratio": 0.1908304846169276,
+        "budget_consumer_ratio": 0.8862063332561546,
+        "second_price_ratio": 0.730074102818817,
+        "cpa_exceedance_Rate": 5.424995915941071,
+        "last_compete_tick_index": 47,
+        "bidMean": 1.0942384152586833,
+        "policyName": "PidBiddingStrategy_player",
+        "episode": "0",
+        "playerindex": "0",
+        "score": 0.0968978809115998
+      }
+    ],
+    "cpaConstraint": 100.0,
+    "budget": 2900.0,
+    "reward": 4,
+    "allCost": 2569.9983664428482,
+    "cpa": 642.4995915946496,
+    "targetValue": 400.0,
+    "allCompetePv": 4973.0,
+    "allWinPv": 949.0,
+    "win_pv_ratio": 0.1908304846169276,
+    "budget_consumer_ratio": 0.8862063332561546,
+    "second_price_ratio": 0.730074102818817,
+    "cpa_exceedance_Rate": 5.424995915941071,
+    "last_compete_tick_index": 47.0,
+    "bidMean": 1.0942384152586833,
+    "score": 4.84489404557999e-06
+  },
+  "wall_time_sec": 9.87,
+  "max_rss_mb": 846.8
+}

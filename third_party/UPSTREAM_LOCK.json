@@ -1,0 +1,21 @@
+{
+  "locked_at": "2026-07-28",
+  "python_env": "conda env auctionnet_py39, Python 3.9.12, see ../requirements-upstream-py39.lock.txt",
+  "repos": {
+    "AuctionNet": {
+      "url": "https://github.com/alimama-tech/AuctionNet",
+      "commit": "c20de631a40e24669d1d6a8e2acefd8f492f172d",
+      "commit_date": "2025-04-25 11:36:23 +0800",
+      "license": "Apache-2.0 (LICENSE.txt present)",
+      "role": "upstream primary (online multi-agent auction environment)"
+    },
+    "AIGB_Baseline": {
+      "url": "https://github.com/alimama-tech/NeurIPS_Auto_Bidding_AIGB_Track_Baseline",
+      "commit": "550f0b1014fd3928014af9f2919a88e75e28fe8a",
+      "commit_date": "2024-08-21 10:55:50 +0800",
+      "license": "NO LICENSE FILE in repo — treat as read/reference only; do NOT copy source into internal product code until license is clarified",
+      "role": "upstream reference (DT/DD training + threshold offline eval)"
+    }
+  },
+  "policy": "Both directories are read-only. Any required change is expressed as a monkeypatch in scripts/ or an adapter in src/adsim/, never edited in place."
+}

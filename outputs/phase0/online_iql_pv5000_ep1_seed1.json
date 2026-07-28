@@ -1,0 +1,57 @@
+{
+  "player": "iql",
+  "pv_num": 5000,
+  "num_episode": 1,
+  "player_index": 0,
+  "seed": 1,
+  "python": "3.9.12",
+  "extra_gin_bindings": [
+    "Controller.pv_num = 5000",
+    "run_test.num_episode = 1"
+  ],
+  "status": "ok",
+  "result": {
+    "policyName": "Iql-PlayerStrategy_player",
+    "playerindex": 0,
+    "category": 0,
+    "rawData": [
+      {
+        "cpaConstraint": 100.0,
+        "budget": 2900.0,
+        "reward": "0",
+        "allCost": 0.16933852462459592,
+        "cpa": 1693385246.245959,
+        "targetValue": 0.0,
+        "allCompetePv": "4973",
+        "allWinPv": "2",
+        "win_pv_ratio": 0.0004021717273275608,
+        "budget_consumer_ratio": 5.8392594698136526e-05,
+        "second_price_ratio": 0.9679002865313897,
+        "cpa_exceedance_Rate": 16933851.462442655,
+        "last_compete_tick_index": 0,
+        "bidMean": 0.04779075507239188,
+        "policyName": "Iql-PlayerStrategy_player",
+        "episode": "0",
+        "playerindex": "0",
+        "score": 0.0
+      }
+    ],
+    "cpaConstraint": 100.0,
+    "budget": 2900.0,
+    "reward": 0,
+    "allCost": 0.16933852462459592,
+    "cpa": 1693385246.245959,
+    "targetValue": 0.0,
+    "allCompetePv": 4973.0,
+    "allWinPv": 2.0,
+    "win_pv_ratio": 0.0004021717273275608,
+    "budget_consumer_ratio": 5.8392594698136526e-05,
+    "second_price_ratio": 0.9679002865313897,
+    "cpa_exceedance_Rate": 16933851.462442655,
+    "last_compete_tick_index": 0.0,
+    "bidMean": 0.04779075507239188,
+    "score": 0.0
+  },
+  "wall_time_sec": 6.91,
+  "max_rss_mb": 731.0
+}
