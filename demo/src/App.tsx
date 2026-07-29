@@ -9,6 +9,7 @@ import type { Candidate, DemoData } from './lib/types'
 
 // categorical slots 1-3 (validated); LLM strategies get slot-4 yellow with
 // direct labels/legend always present as the secondary channel
+// baseline series colors; violet #4a3aa7 is RESERVED for user experiments
 const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4']
 
 export default function App() {
@@ -79,7 +80,7 @@ export default function App() {
       }
     }
     return (id: string) => {
-      if (id.startsWith('user_')) return '#e87ba4' // user runs: fixed magenta slot
+      if (id.startsWith('user_')) return '#4a3aa7' // user runs: violet, reserved — never assigned to baselines
       const cand = data?.comparisons.flatMap((c) => c.candidates).find((x) => x.id === id)
       return ids.get(family(cand?.name ?? id)) ?? SERIES[0]
     }

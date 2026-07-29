@@ -117,12 +117,23 @@ export function Explainer({ samples }: { samples: SampleRow[] }) {
             pValue；执行器逐条机械计算 <span className="mono">出价 = 120 × 该条的 pValue</span>，
             得到 0.036 / 0.132 / 0.084 元…——出价条条不同，但"愿意为单位转化付多少钱"整个时段一致。
           </p>
-          <p style={{ margin: '0 0 10px', color: 'var(--text-secondary)' }}>
+          <p style={{ margin: '0 0 6px', color: 'var(--text-secondary)' }}>
             <b>广告主侧完全可以复现同样的架构</b>：真实平台的自动竞价本来就是"系统持有系数、逐次曝光
             实时乘 pCVR 出价"，把"LLM 每半小时给一次系数"接到自家出价系统即可，无需 LLM 参与每一次
             竞价。成本实测：500k 市场一轮实验（2 episode、96 次调用）约 5 万 input + 3 万 output
             token，每次决策约 4 秒。若模型输出不合法，平台自动 fallback（沿用前一系数 → PID →
             安全固定值），竞价不中断。
+          </p>
+          <p style={{ margin: '0 0 10px', color: 'var(--text-secondary)' }}>
+            <b>广告主能拿到 pValue 么？</b>分两种情况。① 用平台的<b>自动竞价产品</b>（Google
+            tCPA、Meta 成本上限、亚马逊自动竞价等）：pCVR（即 pValue）由平台内部预估并在竞价时刻
+            使用，广告主拿不到逐次曝光的原始值——但广告主设置的"目标 CPA / 出价上限"实质上就是在设
+            alpha，平台替你完成"× pValue"那一步，所以本架构对应的落地形式是<b>用 LLM 动态调
+            tCPA/出价倍率</b>。② 用<b>开放竞价接口</b>（RTB/DSP、手动竞价 API）：广告主或其 DSP
+            自建 pCVR 模型逐次预估（大广告主和代理商的普遍做法），此时"LLM 出 alpha × 自有
+            pCVR"可原样复制。关键是：<b>拿不拿得到 pValue 不影响本平台结论的迁移性</b>——我们比较的
+            是"系数怎么调"这一层的策略优劣；pValue 由谁算、算得准不准是另一层问题，真实迁移前需用
+            客户数据校准 pCVR 分布。
           </p>
           {samples.length > 0 && (
             <>

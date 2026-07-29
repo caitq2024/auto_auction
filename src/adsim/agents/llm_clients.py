@@ -25,6 +25,17 @@ SELF_SERVE_MODELS = {
 }
 
 _NO_TEMPERATURE_MARKERS = ("opus-4-8", "opus-5", "sonnet-5", "fable-5")
+# Reasoning models emit a reasoningContent block BEFORE the text block; a
+# 300-token budget truncates mid-reasoning and no text is ever produced,
+# silently driving every call to fallback. Give them room.
+_REASONING_MARKERS = ("fable-5", "deepseek", "r1-v1")
+_REASONING_MIN_TOKENS = 2500
+
+
+def _effective_max_tokens(model_id: str, requested: int) -> int:
+    if any(m in model_id for m in _REASONING_MARKERS):
+        return max(requested, _REASONING_MIN_TOKENS)
+    return requested
 
 def _extract_text(resp: dict) -> str:
     """First text block from a Converse response. Reasoning models (deepseek-r1,
@@ -52,7 +63,7 @@ class BedrockClient:
         from botocore.config import Config
 
         self.model_id = model_id
-        self.max_tokens = max_tokens
+        self.max_tokens = _effective_max_tokens(model_id, max_tokens)
         self.temperature = temperature
         self._client = boto3.client(
             "bedrock-runtime",
@@ -116,7 +127,7 @@ class BearerTokenClient:
         self.model_id = model_id
         self._key = api_key.strip()
         self.region = region
-        self.max_tokens = max_tokens
+        self.max_tokens = _effective_max_tokens(model_id, max_tokens)
         self.temperature = None if any(
             m in model_id for m in _NO_TEMPERATURE_MARKERS) else temperature
         self.timeout_sec = timeout_sec

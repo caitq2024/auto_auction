@@ -5,9 +5,9 @@ export default defineConfig({
   plugins: [react()],
   base: './',
   server: {
-    proxy: { '/api': 'http://localhost:8688' },
+    proxy: { '/api': { target: 'https://localhost:8688', secure: false } },
   },
   preview: {
-    proxy: { '/api': 'http://localhost:8688' },
+    proxy: { '/api': { target: 'https://localhost:8688', secure: false } },
   },
 })
