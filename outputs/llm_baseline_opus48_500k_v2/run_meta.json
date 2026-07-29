@@ -1,0 +1,14 @@
+{
+  "scenario_id": "llm_baseline_claude-opus-4-8",
+  "seed": 1,
+  "episodes": 2,
+  "wall_time_sec": [
+    338.28,
+    268.76
+  ],
+  "internal_commit": "648a25d13a1b7c27b08dc5d7130c6a91dbae5c12",
+  "model_id": "us.anthropic.claude-opus-4-8",
+  "total_input_tokens": 93291,
+  "total_output_tokens": 21322,
+  "total_llm_calls": 95
+}

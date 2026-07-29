@@ -35,7 +35,7 @@ const PROMPT_VERSIONS = [
   {
     ver: 'v2 pacing 版',
     desc: 'v1 + 明确的花钱纪律："没花完的预算是纯损失；按 t/48 进度对表，落后就果断加价（×1.3-2）；剩余 >10% 即失败"',
-    rows: [{ model: 'Haiku 4.5', score: '6.55', util: '72%' }, { model: 'Opus 4.8', score: '（重跑中）', util: '—' }],
+    rows: [{ model: 'Haiku 4.5', score: '6.55', util: '72%' }, { model: 'Opus 4.8', score: '7.56', util: '99%' }],
   },
 ]
 
