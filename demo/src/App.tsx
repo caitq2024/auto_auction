@@ -121,7 +121,10 @@ export default function App() {
 
       <footer style={{ marginTop: 28, color: 'var(--text-muted)', fontSize: 12 }}>
         数据源：auction-sim-platform 实验产物（parquet / 轨迹 JSONL），由 scripts/export_demo.py
-        聚合。所有指标为模拟器结果，未经客户数据校准，不代表真实广告平台收益。
+        聚合。所有指标为模拟器结果，未经客户数据校准，不代表真实广告平台收益。想动手？
+        <a href="https://github.com/caitq2024/auto_auction/tree/main/notebooks" target="_blank" rel="noreferrer" style={{ color: 'inherit' }}>
+          教学 notebook：从看懂数据到亲手实现 PID / IQL / DT / LLM 四种策略 →
+        </a>
       </footer>
     </div>
   )
