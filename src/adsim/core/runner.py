@@ -54,14 +54,22 @@ class EpisodeRunner:
         self.scenario = scenario
         self.rng = RngManager(scenario.seed, legacy_mode=scenario.legacy_rng)
         self.auction = GspAuction(scenario.reserve_pv_price, self.rng, scenario.num_agent)
-        num_category = len({a.category for a in scenario.advertisers})
-        self.traffic = ParametricTrafficGenerator(
-            num_tick=scenario.num_tick,
-            num_agent=scenario.num_agent,
-            num_agent_category=scenario.num_agent // num_category,
-            num_category=num_category,
-            pv_num=scenario.pv_num,
-        )
+        if scenario.traffic_type == "replay":
+            from adsim.traffic.replay import ReplayTrafficGenerator
+
+            self.traffic: object = ReplayTrafficGenerator(
+                period_csvs=scenario.extra["replay_period_csvs"],
+                num_agent=scenario.num_agent,
+            )
+        else:
+            num_category = len({a.category for a in scenario.advertisers})
+            self.traffic = ParametricTrafficGenerator(
+                num_tick=scenario.num_tick,
+                num_agent=scenario.num_agent,
+                num_agent_category=scenario.num_agent // num_category,
+                num_category=num_category,
+                pv_num=scenario.pv_num,
+            )
         self.agents: list[BidAgent] = [
             build_agent(a.strategy, a.strategy_kwargs) for a in scenario.advertisers
         ]
