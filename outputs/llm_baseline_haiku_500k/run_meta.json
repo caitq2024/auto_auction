@@ -1,0 +1,14 @@
+{
+  "scenario_id": "llm_baseline_claude-haiku-4-5-20251001-v1",
+  "seed": 1,
+  "episodes": 2,
+  "wall_time_sec": [
+    219.87,
+    208.99
+  ],
+  "internal_commit": "7028d5f6c22bdba1a75742acf4597466185a90d5",
+  "model_id": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "total_input_tokens": 50744,
+  "total_output_tokens": 28789,
+  "total_llm_calls": 96
+}

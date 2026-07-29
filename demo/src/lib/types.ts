@@ -67,8 +67,24 @@ export interface LLMRun {
   episodes: LLMEpisode[]
 }
 
+export interface SampleRow {
+  label: string
+  note: string
+  row: {
+    timeStepIndex: number
+    pValue: number
+    bid: number
+    leastWinningCost: number
+    adSlot: number
+    isExposed: number
+    cost: number
+    conversionAction: number
+  }
+}
+
 export interface DemoData {
   generated_from: string
+  sample_rows: SampleRow[]
   comparisons: Comparison[]
   llm_runs: LLMRun[]
 }

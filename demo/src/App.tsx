@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
 
+import { Explainer } from './components/Explainer'
 import { Leaderboard } from './components/Leaderboard'
 import { LLMTrace } from './components/LLMTrace'
 import { Replay } from './components/Replay'
 import type { DemoData } from './lib/types'
 
-const SERIES = ['#2a78d6', '#eb6834', '#1baf7a'] // validated categorical slots 1-3
+// categorical slots 1-3 (validated); LLM strategies get slot-4 yellow with
+// direct labels/legend always present as the secondary channel
+const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4']
 
 export default function App() {
   const [data, setData] = useState<DemoData | null>(null)
@@ -24,19 +27,21 @@ export default function App() {
 
   const comp = data?.comparisons.find((c) => c.key === compKey) ?? data?.comparisons[0]
 
-  // color follows the entity across scenario switches (never repainted by rank)
+  // color follows the entity across scenario switches (never repainted by
+  // rank); variants of one strategy ("DT (自训 500k/50k)") share a family slot
   const colorOf = useMemo(() => {
+    const family = (name: string) => name.split(' ')[0] + (name.startsWith('LLM') ? ` ${name.split(' ')[1]}` : '')
     const ids = new Map<string, string>()
     let i = 0
     for (const c of data?.comparisons ?? []) {
       for (const cand of c.candidates) {
-        const family = cand.name // stable display identity across scenarios
-        if (!ids.has(family)) ids.set(family, SERIES[i++ % SERIES.length])
+        const f = family(cand.name)
+        if (!ids.has(f)) ids.set(f, SERIES[i++ % SERIES.length])
       }
     }
     return (id: string) => {
       const cand = data?.comparisons.flatMap((c) => c.candidates).find((x) => x.id === id)
-      return ids.get(cand?.name ?? id) ?? SERIES[0]
+      return ids.get(family(cand?.name ?? id)) ?? SERIES[0]
     }
   }, [data])
 
@@ -66,6 +71,7 @@ export default function App() {
       </header>
 
       <div style={{ display: 'grid', gap: 20 }}>
+        <Explainer samples={data.sample_rows ?? []} />
         <Leaderboard comp={comp} colorOf={colorOf} />
         <Replay comp={comp} colorOf={colorOf} />
         <LLMTrace runs={data.llm_runs} />
