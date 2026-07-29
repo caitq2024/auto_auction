@@ -22,8 +22,12 @@ function niceTicks(max: number, count = 4): number[] {
   const raw = max / count
   const mag = 10 ** Math.floor(Math.log10(raw))
   const step = [1, 2, 5, 10].map((s) => s * mag).find((s) => s >= raw) ?? raw
+  // extend to the first tick AT OR ABOVE max — otherwise the axis tops out
+  // below the data (e.g. max 2900 with step 1000 gave a 2000 top, clipping
+  // every line above it)
+  const top = Math.ceil((max - 1e-9) / step) * step
   const ticks: number[] = []
-  for (let v = 0; v <= max + 1e-9; v += step) ticks.push(v)
+  for (let v = 0; v <= top + 1e-9; v += step) ticks.push(v)
   return ticks
 }
 

@@ -1,35 +1,75 @@
-# auction-sim-platform
+# auto_auction · 广告竞价多策略模拟实验平台
 
-内部广告竞价与预算分配研究平台。基于 [AuctionNet](https://github.com/alimama-tech/AuctionNet)（upstream primary，Apache-2.0）与 AIGB Track Baseline（upstream reference，无 LICENSE，只读参考）。总体设计见 `../AuctionNet_内部广告竞价模拟平台_设计与实施计划.md`。
+基于 [AuctionNet](https://github.com/alimama-tech/AuctionNet)（NeurIPS 2024, Apache-2.0）的广告竞价研究平台：48 个广告主对最多 50 万次展示机会实时竞价（3 坑位 GSP），把受控广告主的策略换成**传统算法 / 离线强化学习 / Decision Transformer / LLM** 同台对比，按 NeurIPS 竞赛口径（转化数 × CPA 超标平方惩罚）评分。
 
-## 当前状态
+## 当前能力一览
 
-Phase 0（upstream 复现与审计）已完成，详见：
+| 模块 | 状态 |
+|---|---|
+| 内部模拟器核心（GSP、预算控制、RNG 管理、多受控 agent） | ✅ `src/adsim/`，32 个测试全过，与 upstream 锚点 parity 对齐 |
+| 策略：PID / Fixed / IQL 等 upstream checkpoint / 自训 DT / LLM | ✅ `agents/registry.py`，统一接口 |
+| LLM 竞价 agent（每时段一次结构化决策 + 校验 + 三级 fallback + 轨迹导出） | ✅ `agents/llm.py`，支持 Bedrock（含 BYO API key 的 BearerTokenClient） |
+| 多策略配对比较（同市场同随机数、bootstrap CI、markdown 报告） | ✅ `adsim compare` CLI |
+| DT 训练管道（模拟器自产数据 → upstream DT 训练 → 接回评估） | ✅ `scripts/train_dt_baseline.py` |
+| SFT 数据导出（教师轨迹 → chat JSONL） | ✅ `training/rollout.py` |
+| Web demo（排行榜 / 48-tick 回放 / LLM 决策透视 / 自助实验） | ✅ `demo/`，已集成到团队 aifl-dashboard `/tools/auction-bid` |
 
-- `docs/upstream_audit.md` — 环境、缺失文件、依赖问题、已验证的 upstream bug；
-- `docs/upstream_parity.md` — 锚点数字与 threshold vs online 差异量化；
-- `third_party/UPSTREAM_LOCK.json` — commit lock 与许可结论；
-- `IMPLEMENTATION_STATUS.md` — 进度、blocker、Phase 1 patch 计划。
+### 500k PV 全规模排行榜（当前基线）
 
-## 快速开始（复现 Phase 0）
+| # | 策略 | score | 实际 CPA（目标 100） |
+|---|---|---|---|
+| 1 | IQL (Implicit Q-Learning) | 17.78 | 100.5 ✓ |
+| 2 | LLM Claude Opus 4.8 (prompt-only) | 7.63 | 109.1 |
+| 3 | PID | 6.15 | 172.4 |
+| 4 | LLM Claude Haiku 4.5 (prompt-only) | 5.74 | 145.9 |
+| 5 | DT（自训 20k 步） | 2.23 | 248.6 |
+
+> 所有数字为 simulated 结果（模拟器口径），未经真实平台数据校准。
+
+## 快速开始
 
 ```bash
-# 环境：conda env auctionnet_py39 (Python 3.9.12)
-conda create -y -n auctionnet_py39 python=3.9.12
-~/miniconda3/envs/auctionnet_py39/bin/pip install -r requirements-upstream-py39.lock.txt
+# 环境：Python 3.11
+conda create -y -n adsim_py311 python=3.11
+pip install -e . && pip install fastapi uvicorn boto3
 
-# 在线 smoke test（小流量，PID 受控玩家）
-python scripts/smoke_test_auctionnet_online.py --player pid --pv-num 5000 --num-episode 1 \
-  --out outputs/phase0/online_pid.json
+# 跑一个 4 策略对比（20k PV × 4 episodes，几分钟）
+adsim compare --candidates pid upstream:iql dt fixed_alpha:alpha=120 \
+  --pv-num 20000 --episodes 4 --seed 1 --out outputs/my_compare
 
-# 生成小样本 log 后运行 AIGB threshold 离线评估
-python scripts/smoke_test_auctionnet_online.py --player pid --pv-num 5000 --num-episode 1 --generate-log
-python scripts/smoke_test_aigb_offline.py --traffic third_party/AuctionNet/data/log/0.csv \
-  --advertiser 0 --budget 2900 --cpa 100 --out outputs/phase0/aigb_offline.json
+# LLM 竞价基线（需要 Bedrock 权限）
+python scripts/run_llm_baseline.py --model us.anthropic.claude-haiku-4-5-20251001-v1:0 \
+  --pv-num 50000 --episodes 2 --max-alpha 2000 --out outputs/my_llm_run
+
+# Web demo（先导出数据，再起前后端）
+python scripts/export_demo.py
+cd demo/server && uvicorn api:app --port 8688 \
+  --ssl-keyfile certs/adsim-key.pem --ssl-certfile certs/adsim-cert.pem &
+cd .. && npm install && npm run dev
 ```
 
-## 约束
+## 仓库结构
 
-- `third_party/` 只读，不做任何 in-place 修改（必要变更以 monkeypatch/adapter 形式并文档化）；
-- 不自动下载完整 80GB 数据；
-- 内部代码进 `src/adsim/`（目标 Python 3.11），upstream 兼容层隔离在 adapter。
+```
+src/adsim/          # 模拟器核心：core/(runner,scenario,rng) auction/(gsp,budget)
+                    # agents/(pid,dt,llm,upstream adapter) evaluation/ training/ storage/
+demo/               # Web 实验台：React SPA + FastAPI 自助实验后端(demo/server/)
+scripts/            # 复现脚本：smoke test / DT 训练 / LLM 基线 / demo 数据导出
+tests/              # unit + parity(对齐 upstream 锚点) + integration(确定性)
+docs/               # upstream 审计、parity 报告、实现细节(IMPLEMENTATION_DETAILS.md)
+outputs/            # 实验产物（parquet 明细 + 轨迹 JSONL + 基线结果）
+third_party/        # AuctionNet/AIGB（只读，commit 锁定于 UPSTREAM_LOCK.json，不入库）
+```
+
+## 复现与文档
+
+- **实现细节与实验记录**（复盘入口）：`docs/IMPLEMENTATION_DETAILS.md`
+- Phase 0 upstream 审计：`docs/upstream_audit.md` / `docs/upstream_parity.md`
+- 进度与下一步：`IMPLEMENTATION_STATUS.md`
+- Demo 设计：`docs/demo_design.md`
+
+## 硬约束
+
+- `third_party/` 只读（AIGB Baseline 无 LICENSE，仅作参考，不复制源码）；
+- 不连接真实广告账户，不执行真实出价；
+- 用户自带的 Bedrock API key 只存内存，不落盘、不回显、不入日志。
