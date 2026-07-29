@@ -41,8 +41,28 @@ MAX_PV = 500000          # full paper-scale market allowed (sim ~6 min/episode)
 MAX_EPISODES = 2
 MAX_PROMPT_CHARS = 4000
 MAX_CONCURRENT_TASKS = 4
+MAX_TASKS_KEPT = 200     # bound the in-memory table; oldest finished evicted
 _TASKS: dict[str, dict] = {}
 _TASKS_LOCK = threading.Lock()
+
+
+def _resolve_uid(x_aifl_alias: Optional[str], x_user_id: str) -> str:
+    """Task-ownership identity: prefer X-AIFL-Alias (the dept-site BFF strips
+    any client-supplied copy and injects the verified employee alias, so it
+    can be trusted as-is); fall back to the frontend's X-User-Id session id
+    when running standalone. Mirrors the ad-budget backend."""
+    return (x_aifl_alias or "").strip().lower() or x_user_id
+
+
+def _evict_old_tasks_locked() -> None:
+    """Drop oldest finished tasks past MAX_TASKS_KEPT (call under _TASKS_LOCK)."""
+    if len(_TASKS) <= MAX_TASKS_KEPT:
+        return
+    finished = sorted(
+        (tid for tid, t in _TASKS.items() if t["status"] != "running"),
+        key=lambda tid: _TASKS[tid]["created_at"])
+    for tid in finished[:len(_TASKS) - MAX_TASKS_KEPT]:
+        _TASKS.pop(tid, None)
 
 
 class ExperimentRequest(BaseModel):
@@ -74,19 +94,22 @@ def create_experiment(
     req: ExperimentRequest,
     x_bedrock_key: Optional[str] = Header(None),
     x_user_id: str = Header("anonymous"),
+    x_aifl_alias: Optional[str] = Header(None),
 ):
     key = (x_bedrock_key or "").strip()
     if not key:
         raise HTTPException(400, "缺少 X-Bedrock-Key（在页面设置区粘贴你的 Bedrock API key）")
     if req.model not in SELF_SERVE_MODELS:
         raise HTTPException(400, f"未知模型 {req.model}")
+    uid = _resolve_uid(x_aifl_alias, x_user_id)
     with _TASKS_LOCK:
+        _evict_old_tasks_locked()
         running = sum(1 for t in _TASKS.values() if t["status"] == "running")
         if running >= MAX_CONCURRENT_TASKS:
             raise HTTPException(429, "当前实验队列已满，请稍后再试")
         task_id = uuid.uuid4().hex[:12]
         _TASKS[task_id] = {
-            "status": "running", "user": x_user_id, "progress": 0.0,
+            "status": "running", "user": uid, "progress": 0.0,
             "detail": "启动中", "created_at": time.time(), "result": None,
             "error": None,
         }
@@ -97,9 +120,10 @@ def create_experiment(
 
 
 @app.get("/api/experiments/{task_id}")
-def get_experiment(task_id: str, x_user_id: str = Header("anonymous")):
+def get_experiment(task_id: str, x_user_id: str = Header("anonymous"),
+                   x_aifl_alias: Optional[str] = Header(None)):
     t = _TASKS.get(task_id)
-    if not t or t["user"] != x_user_id:
+    if not t or t["user"] != _resolve_uid(x_aifl_alias, x_user_id):
         raise HTTPException(404, "task not found")
     return {k: t[k] for k in ("status", "progress", "detail", "result", "error")}
 

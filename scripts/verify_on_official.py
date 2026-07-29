@@ -35,9 +35,22 @@ LLM_TRAJS = {
 
 
 def alpha_seq_from_parquet(path: Path) -> list[float]:
+    """Per-tick alpha. Upstream-adapter agents (IQL etc.) don't expose
+    last_alpha — the alpha column is NaN for them. Reconstruct the effective
+    alpha from bid_mean / current_pvalue_mean instead of treating NaN as 0
+    (which silently zeroed IQL's whole trajectory in the first version of
+    this script)."""
     t = pd.read_parquet(path)
     t = t[(t.advertiser_id == 0) & (t.episode == 0)].sort_values("tick")
-    return [a if pd.notna(a) else 0.0 for a in t.alpha]
+    seq: list[float] = []
+    for _, r in t.iterrows():
+        if pd.notna(r.alpha):
+            seq.append(float(r.alpha))
+            continue
+        obs = json.loads(r.observation_json) if r.observation_json else None
+        pv_mean = obs["traffic"]["current_pvalue_mean"] if obs else None
+        seq.append(float(r.bid_mean / pv_mean) if pv_mean else 0.0)
+    return seq
 
 
 def alpha_seq_from_jsonl(path: Path) -> list[float]:
