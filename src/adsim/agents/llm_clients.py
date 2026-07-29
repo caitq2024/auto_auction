@@ -26,6 +26,16 @@ SELF_SERVE_MODELS = {
 
 _NO_TEMPERATURE_MARKERS = ("opus-4-8", "opus-5", "sonnet-5", "fable-5")
 
+def _extract_text(resp: dict) -> str:
+    """First text block from a Converse response. Reasoning models (deepseek-r1,
+    Claude with extended thinking) put a reasoningContent block first — never
+    assume content[0] is text."""
+    for block in resp.get("output", {}).get("message", {}).get("content", []):
+        if "text" in block:
+            return block["text"]
+    raise RuntimeError("model returned no text block (reasoning-only response?)")
+
+
 
 class BedrockClient:
     def __init__(
@@ -85,7 +95,7 @@ class BedrockClient:
         self.total_input_tokens += usage.get("inputTokens", 0)
         self.total_output_tokens += usage.get("outputTokens", 0)
         self.calls += 1
-        return resp["output"]["message"]["content"][0]["text"]
+        return _extract_text(resp)
 
 
 class BearerTokenClient:
@@ -144,7 +154,7 @@ class BearerTokenClient:
                 self.total_input_tokens += usage.get("inputTokens", 0)
                 self.total_output_tokens += usage.get("outputTokens", 0)
                 self.calls += 1
-                return resp["output"]["message"]["content"][0]["text"]
+                return _extract_text(resp)
             except urllib.error.HTTPError as e:
                 if e.code in (429, 500, 503):
                     last_err = e
