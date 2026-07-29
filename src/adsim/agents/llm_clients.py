@@ -14,6 +14,7 @@ from __future__ import annotations
 # Models offered in the self-serve demo (subset of Bedrock catalog that the
 # team account has access to; per-1M-token USD prices for cost display).
 SELF_SERVE_MODELS = {
+    "claude-fable-5": ("global.anthropic.claude-fable-5", 10.0, 50.0),
     "claude-haiku-4-5": ("us.anthropic.claude-haiku-4-5-20251001-v1:0", 1.0, 5.0),
     "claude-sonnet-4-6": ("global.anthropic.claude-sonnet-4-6", 3.0, 15.0),
     "claude-sonnet-5": ("global.anthropic.claude-sonnet-5", 3.0, 15.0),

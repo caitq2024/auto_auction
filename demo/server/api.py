@@ -37,7 +37,7 @@ app = FastAPI(title="adsim self-serve", version="0.1.0")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"],
                    allow_headers=["*"])
 
-MAX_PV = 100000          # self-serve cap: keep one experiment under ~2 min sim time
+MAX_PV = 500000          # full paper-scale market allowed (sim ~6 min/episode)
 MAX_EPISODES = 2
 MAX_PROMPT_CHARS = 4000
 MAX_CONCURRENT_TASKS = 4

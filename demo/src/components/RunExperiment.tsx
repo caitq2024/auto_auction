@@ -181,6 +181,7 @@ export function RunExperiment() {
             <option value={20000}>20,000（最快）</option>
             <option value={50000}>50,000</option>
             <option value={100000}>100,000</option>
+            <option value={500000}>500,000（论文标准市场，模拟最慢）</option>
           </select>
         </label>
         <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
@@ -244,7 +245,11 @@ export function RunExperiment() {
         )}
         {selected && !taskId && (
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
-            预计成本 ≈ ${(((episodes * 48 * 550) / 1e6) * selected.price_in_per_1m + ((episodes * 48 * 300) / 1e6) * selected.price_out_per_1m).toFixed(3)} · 时长 ≈ {episodes * 4}–{episodes * 8} 分钟
+            预计 LLM 调用 <b>{episodes * 48} 次</b>（每时段 1 次 × 48 时段 × {episodes} episode，与
+            PV 规模无关）· 成本 ≈ $
+            {(((episodes * 48 * 550) / 1e6) * selected.price_in_per_1m + ((episodes * 48 * 300) / 1e6) * selected.price_out_per_1m).toFixed(3)}
+            （按 ~550 in / ~300 out tok/次）· 时长 ≈ LLM {episodes * 3}–{episodes * 7} 分钟 + 模拟
+            {' '}{Math.ceil((pvNum / 500000) * 6 * episodes)} 分钟
           </span>
         )}
       </div>
