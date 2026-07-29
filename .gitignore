@@ -6,3 +6,4 @@ third_party/AuctionNet/
 third_party/AIGB_Baseline/
 outputs/**/*.parquet
 *.egg-info/
+data/official/
