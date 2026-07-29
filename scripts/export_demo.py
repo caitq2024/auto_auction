@@ -24,7 +24,7 @@ COMPARISONS = {
         "episodes": 2,
         "names": {
             "pid": "PID",
-            "upstream_iql": "IQL (官方RL)",
+            "upstream_iql": "IQL (Implicit Q-Learning)",
             "dt_model_diroutputs/dt_baseline_500k/saved_model/DTtest": "DT (自训 500k)",
             "dt_model_diroutputs": "DT (自训 500k)",  # in case rglob resolves partial path
         },
@@ -34,7 +34,7 @@ COMPARISONS = {
         "label": "50k PV 快速实验",
         "pv_num": 50000,
         "episodes": 4,
-        "names": {"pid": "PID", "upstream_iql": "IQL (官方RL)", "dt": "DT (自训 50k)"},
+        "names": {"pid": "PID", "upstream_iql": "IQL (Implicit Q-Learning)", "dt": "DT (自训 50k)"},
     },
 }
 
