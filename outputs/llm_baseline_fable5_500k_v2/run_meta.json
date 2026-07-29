@@ -1,0 +1,14 @@
+{
+  "scenario_id": "llm_baseline_claude-fable-5",
+  "seed": 1,
+  "episodes": 2,
+  "wall_time_sec": [
+    1073.51,
+    1451.59
+  ],
+  "internal_commit": "2223f51f14d8fdd4bcf9b13b5a77e7fda4da32a7",
+  "model_id": "global.anthropic.claude-fable-5",
+  "total_input_tokens": 42198,
+  "total_output_tokens": 30029,
+  "total_llm_calls": 43
+}

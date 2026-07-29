@@ -1,0 +1,11 @@
+{
+  "scenario_id": "compare_dt_model_diroutputs/dt_official/saved_model/DTtest",
+  "seed": 1,
+  "episodes": 2,
+  "wall_time_sec": [
+    34.49,
+    32.33
+  ],
+  "internal_commit": "2223f51f14d8fdd4bcf9b13b5a77e7fda4da32a7",
+  "candidate": "dt_model_diroutputs/dt_official/saved_model/DTtest"
+}

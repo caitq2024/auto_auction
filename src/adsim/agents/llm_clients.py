@@ -59,6 +59,8 @@ class BedrockClient:
     ):
         if any(m in model_id for m in _NO_TEMPERATURE_MARKERS):
             temperature = None
+        if any(m in model_id for m in _REASONING_MARKERS):
+            timeout_sec = max(timeout_sec, 120.0)  # reasoning takes 30-90s
         import boto3
         from botocore.config import Config
 
@@ -96,8 +98,12 @@ class BedrockClient:
                 break
             except botocore.exceptions.ClientError as e:
                 code = e.response.get("Error", {}).get("Code", "")
-                if code not in ("ServiceUnavailableException", "ThrottlingException"):
+                if code not in ("ServiceUnavailableException", "ThrottlingException",
+                                "InternalServerException", "ModelErrorException"):
                     raise
+                last_err = e
+                _time.sleep(2**attempt)
+            except botocore.exceptions.ReadTimeoutError as e:
                 last_err = e
                 _time.sleep(2**attempt)
         else:
@@ -130,6 +136,8 @@ class BearerTokenClient:
         self.max_tokens = _effective_max_tokens(model_id, max_tokens)
         self.temperature = None if any(
             m in model_id for m in _NO_TEMPERATURE_MARKERS) else temperature
+        if any(m in model_id for m in _REASONING_MARKERS):
+            timeout_sec = max(timeout_sec, 120.0)
         self.timeout_sec = timeout_sec
         self.total_input_tokens = 0
         self.total_output_tokens = 0

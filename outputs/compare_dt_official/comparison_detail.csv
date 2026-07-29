@@ -1,0 +1,3 @@
+candidate,episode,score,conversions,expected_conversions,cost,actual_cpa,target_cpa,cpa_violation,budget_utilization,win_pv,last_compete_tick,wall_time_sec
+dt_model_diroutputs/dt_official/saved_model/DTtest,0,0.9557444617789873,7.0,4.800167079693401,1894.4195416386262,270.63136308736614,100.0,1.7063136308736615,0.6532481178064229,17640,28,34.49
+dt_model_diroutputs/dt_official/saved_model/DTtest,1,2.0547093936653194,12.0,13.196917467286056,2899.9911053270985,241.66592544191099,100.0,1.41665925441911,0.9999969328714132,24698,41,32.33
