@@ -1,0 +1,13 @@
+{
+  "scenario_id": "llm_haiku_official_replay",
+  "seed": 1,
+  "episodes": 1,
+  "wall_time_sec": [
+    248.77
+  ],
+  "internal_commit": "9486b8d52fd541a81780b9000c4411f2c5c771cc",
+  "model": "us.anthropic.claude-haiku-4-5-20251001-v1:0",
+  "traffic": "official period-7",
+  "total_input_tokens": 34471,
+  "total_output_tokens": 14400
+}

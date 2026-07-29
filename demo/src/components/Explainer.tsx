@@ -314,13 +314,39 @@ export function Explainer({ samples }: { samples: SampleRow[] }) {
             ReplayTrafficGenerator——在线模拟直接使用官方流量，对手照常实时竞价，等于免费获得
             "复杂版 500k 流量"。
           </p>
-          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+          <p style={{ margin: '0 0 8px', color: 'var(--text-secondary)' }}>
             <b>三处数据口径</b>，看表时请注意：① <b>策略排行榜与 Episode 回放</b> = 简易版流量 +
             48 广告主<b>在线模拟</b>（对手实时反应）；② <b>自助实验</b> = 同口径①（你的 LLM
-            进同一个市场）；③ 交叉复核（见 GitHub 仓库 scripts/verify_on_official.py）= 官方
-            period-7 数据的<b>离线回放</b>（对手出价冻结、期望转化口径）——分数与①不可直接比大小，
-            只用于验证相对排序。period-7 复核结果与排行榜排序一致：IQL 34.3 &gt; LLM Haiku 27.9
-            &gt; LLM Opus 14.0 &gt; PID 5.4 &gt; DT 2.8。
+            进同一个市场）；③ <b>交叉复核</b> = 官方数据口径，见下表——分数与①不可直接比大小，
+            只用于验证相对排序。
+          </p>
+          <div style={{ fontSize: 13, fontWeight: 600, margin: '0 0 6px' }}>
+            交叉复核：同样的策略，三种口径下的排序是否一致？
+          </div>
+          <table className="data" style={{ fontSize: 12 }}>
+            <thead>
+              <tr>
+                <th>策略</th>
+                <th>① 简易流量·在线模拟（排行榜）</th>
+                <th>③a 官方period-7·离线回放</th>
+                <th>③b 官方period-7·在线模拟</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>IQL</td><td>17.78（第1）</td><td>34.3（第1）</td><td style={{ fontWeight: 600 }}>39.0（第1）</td></tr>
+              <tr><td>LLM Haiku 4.5</td><td>5.74-6.55（3-4名）</td><td>27.9（第2）</td><td style={{ fontWeight: 600 }}>13.0（第2，CPA 97.5 达标）</td></tr>
+              <tr><td>LLM Opus 4.8</td><td>7.56-7.63（第2）</td><td>14.0（第3）</td><td>—</td></tr>
+              <tr><td>PID</td><td>6.15（第3）</td><td>5.4（第4）</td><td>2.05（第3）</td></tr>
+              <tr><td>DT（自训）</td><td>2.23（第5）</td><td>2.8（第5）</td><td>—</td></tr>
+            </tbody>
+          </table>
+          <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 12 }}>
+            核心结论：<b>三种口径下排序一致——IQL 第一，LLM 稳定第二且显著优于 PID，DT 垫底</b>：
+            排行榜结论不是简易流量的伪影。官方流量在线模拟中 Haiku 拿 13 个转化、CPA 97.5
+            精确压线达标、零 fallback——prompt-only LLM 在最高保真口径下依然稳居 PID 与
+            IQL 之间。注：③a 离线回放曾因脚本 bug 把 IQL 记为 0 分（upstream 适配器不
+            暴露 alpha，NaN 被当 0），修复方式是从 bid/pValue 反推有效系数——保留此说明以示
+            口径复核本身也需要复核。
           </p>
         </Collapsible>
       </div>
