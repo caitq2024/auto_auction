@@ -42,10 +42,10 @@ def main():
 
     if not args.skip_convert:
         traffic_dir.mkdir(parents=True, exist_ok=True)
-        for f in Path(args.log_dir).glob("*.csv"):
+        for f in Path(args.log_dir).resolve().glob("*.csv"):
             target = traffic_dir / f.name
-            if not target.exists():
-                os.symlink(f, target)
+            target.unlink(missing_ok=True)  # clear stale/broken links
+            os.symlink(f, target)
         from bidding_train_env.train_data_generator.train_data_generator import (
             TrainDataGenerator,
         )

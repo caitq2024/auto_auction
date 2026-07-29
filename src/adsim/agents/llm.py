@@ -46,6 +46,17 @@ prices are around 0.1-1.0 per impression, so competitive alpha values are \
 typically in the tens to low hundreds. Watch `market.recent_win_rate`: if it \
 stays 0 your alpha is too low to win anything.
 
+CRITICAL — unspent budget is pure loss: an episode that ends with budget \
+left scored fewer conversions than it could have. The single most common \
+mistake is bidding too timidly. Pacing rule of thumb: by step t you should \
+have spent roughly t/48 of the initial budget; compare \
+`budget.remaining_budget_ratio` with `time.tick_ratio_remaining` every step — \
+if remaining_budget_ratio is HIGHER, you are behind pace: raise alpha \
+decisively (x1.3-x2, not +5). Only back off when actual_cpa exceeds \
+target_cpa AND you are on/ahead of pace. Ending the day with more than ~10% \
+budget unspent is a failure mode, not prudence. A good alpha found via \
+`historical_win_rate` feedback beats a "safe" low alpha that wins nothing.
+
 Respond with ONLY a JSON object:
 {"action": "set_alpha", "alpha": <number>, "confidence": <0..1>, \
 "reason_code": "<SHORT_UPPER_SNAKE_REASON>"}"""

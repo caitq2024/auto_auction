@@ -181,6 +181,34 @@ export function Explainer({ samples }: { samples: SampleRow[] }) {
           )}
         </Collapsible>
 
+        <Collapsible title="47 个对手是谁？市场如何互相影响">
+          <div style={{ display: 'grid', gap: 8, color: 'var(--text-secondary)' }}>
+            <p style={{ margin: 0 }}>
+              模拟平台里实际部署着 <b>48 套独立运行的决策程序</b>：1 个受控位（被换成待测策略）+
+              47 个对手。对手构成：<b>12 个 PID</b>（纯规则 pacing）、<b>约 23
+              个预训练神经网络模型</b>（IQL、BCQ、TD3+BC、CQL、BC、两种基于模型的 RL 变体——
+              AuctionNet 作者在其数据上训练好、随代码仓库分发的 checkpoint）、<b>12 个
+              OnlineLP</b>（线性规划优化器）。
+            </p>
+            <p style={{ margin: 0 }}>
+              <b>信息结构</b>：每个时段，48 个广告主收到同构但不同值的信息——各自的 pValue
+              数组（同一条展示机会对不同广告主的预估转化概率不同）、各自的剩余预算、各自的历史
+              战绩，然后各自跑自己的程序出价。平台把每条展示机会上的 48 个出价排序，前三名获得
+              坑位、按 GSP 定价、抽样曝光与转化、扣减预算——不只是统计，是完整执行竞价机制。
+            </p>
+            <p style={{ margin: 0 }}>
+              <b>你的出价会改变对手的行为</b>（多智能体反馈循环）：你出价变高 → 把原本第 3
+              名的对手挤出坑位 → 该对手本时段花费和转化减少 → 它的模型看到"花钱太慢" →
+              下个时段它调高自己的出价系数 → 市场价格被推高 → 反过来又影响你。这正是"在线模拟"
+              与"离线回放"（对手出价冻结）的本质区别，也是正式结论必须用在线模拟的原因。
+            </p>
+            <p style={{ margin: 0 }}>
+              <b>诚实的边界</b>：对手不会"察觉你的存在"并针对你——它们只是各自对市场结果做反应，
+              没有对手建模（opponent modeling）。
+            </p>
+          </div>
+        </Collapsible>
+
         <Collapsible title="四个实验策略简介">
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
             {STRATEGY_INTRO.map((s) => (
