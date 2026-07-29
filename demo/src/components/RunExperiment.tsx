@@ -1,0 +1,297 @@
+import { useEffect, useRef, useState } from 'react'
+
+const API = import.meta.env.VITE_API_BASE ?? '/api'
+
+interface ModelInfo {
+  key: string
+  model_id: string
+  price_in_per_1m: number
+  price_out_per_1m: number
+}
+
+interface ExperimentResult {
+  model: string
+  model_id: string
+  pv_num: number
+  custom_prompt: boolean
+  score_mean: number
+  total_input_tokens: number
+  total_output_tokens: number
+  episodes: {
+    episode: number
+    score: number
+    conversions: number
+    cost: number
+    actual_cpa: number
+    budget_utilization: number
+    fallback_rate: number
+    calls: { tick: number; applied_alpha: number; fallback: string | null; raw_output: string | null }[]
+  }[]
+}
+
+function getUserId(): string {
+  const KEY = 'adsim.uid'
+  let uid = localStorage.getItem(KEY)
+  if (!uid) {
+    uid = 'u_' + crypto.randomUUID().replace(/-/g, '').slice(0, 16)
+    localStorage.setItem(KEY, uid)
+  }
+  return uid
+}
+
+export function RunExperiment() {
+  const [models, setModels] = useState<ModelInfo[]>([])
+  const [defaultPrompt, setDefaultPrompt] = useState('')
+  const [apiOk, setApiOk] = useState<boolean | null>(null)
+
+  // Bedrock key: memory only — never persisted, never echoed
+  const [bedrockKey, setBedrockKey] = useState('')
+  const [model, setModel] = useState('claude-haiku-4-5')
+  const [pvNum, setPvNum] = useState(50000)
+  const [episodes, setEpisodes] = useState(1)
+  const [prompt, setPrompt] = useState('')
+  const [showPrompt, setShowPrompt] = useState(false)
+
+  const [taskId, setTaskId] = useState<string | null>(null)
+  const [progress, setProgress] = useState(0)
+  const [detail, setDetail] = useState('')
+  const [result, setResult] = useState<ExperimentResult | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const pollRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    fetch(`${API}/models`)
+      .then((r) => (r.ok ? r.json() : Promise.reject(new Error(`HTTP ${r.status}`))))
+      .then((d) => {
+        setModels(d.models)
+        setDefaultPrompt(d.default_system_prompt)
+        setPrompt(d.default_system_prompt)
+        setApiOk(true)
+      })
+      .catch(() => setApiOk(false))
+    return () => {
+      if (pollRef.current) window.clearInterval(pollRef.current)
+    }
+  }, [])
+
+  const start = async () => {
+    setError(null)
+    setResult(null)
+    try {
+      const res = await fetch(`${API}/experiments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Bedrock-Key': bedrockKey.trim(),
+          'X-User-Id': getUserId(),
+        },
+        body: JSON.stringify({
+          model,
+          pv_num: pvNum,
+          episodes,
+          system_prompt: prompt.trim() === defaultPrompt.trim() ? null : prompt,
+        }),
+      })
+      if (!res.ok) {
+        const body = (await res.json().catch(() => ({}))) as { detail?: string }
+        throw new Error(body.detail ?? `HTTP ${res.status}`)
+      }
+      const { task_id } = (await res.json()) as { task_id: string }
+      setTaskId(task_id)
+      setProgress(0)
+      pollRef.current = window.setInterval(async () => {
+        const r = await fetch(`${API}/experiments/${task_id}`, {
+          headers: { 'X-User-Id': getUserId() },
+        })
+        if (!r.ok) return
+        const t = (await r.json()) as {
+          status: string
+          progress: number
+          detail: string
+          result: ExperimentResult | null
+          error: string | null
+        }
+        setProgress(t.progress)
+        setDetail(t.detail)
+        if (t.status !== 'running') {
+          if (pollRef.current) window.clearInterval(pollRef.current)
+          setTaskId(null)
+          if (t.status === 'done') setResult(t.result)
+          else setError(t.error ?? '未知错误')
+        }
+      }, 2000)
+    } catch (e) {
+      setError(String(e instanceof Error ? e.message : e))
+    }
+  }
+
+  if (apiOk === false)
+    return (
+      <div className="card">
+        <h2 style={{ margin: 0, fontSize: 16 }}>自己跑一个 LLM 竞价实验</h2>
+        <p style={{ color: 'var(--text-muted)', fontSize: 12 }}>
+          实验后端未启动（demo/server/api.py）。静态浏览模式下此区不可用。
+        </p>
+      </div>
+    )
+
+  const selected = models.find((m) => m.key === model)
+
+  return (
+    <div className="card">
+      <h2 style={{ margin: '0 0 4px', fontSize: 16 }}>自己跑一个 LLM 竞价实验</h2>
+      <p style={{ margin: '0 0 12px', color: 'var(--text-secondary)', fontSize: 12 }}>
+        粘贴你的 Bedrock API key（只保存在本页内存与实验任务中，不落盘、不回显），选一个模型，
+        可选地修改指令 prompt，就能把它扔进 48 广告主市场里当竞价 agent。一轮实验 = 每 episode
+        48 次 LLM 决策。
+      </p>
+
+      <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+        <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+          Bedrock API Key（us-west-2）
+          <input
+            type="password"
+            value={bedrockKey}
+            onChange={(e) => setBedrockKey(e.target.value)}
+            placeholder="bedrock-api-key…"
+            style={{ width: '100%', marginTop: 4, padding: '6px 8px', border: '1px solid var(--grid)', borderRadius: 6 }}
+          />
+        </label>
+        <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+          模型
+          <select
+            value={model}
+            onChange={(e) => setModel(e.target.value)}
+            style={{ width: '100%', marginTop: 4, padding: '6px 8px', border: '1px solid var(--grid)', borderRadius: 6 }}
+          >
+            {models.map((m) => (
+              <option key={m.key} value={m.key}>
+                {m.key}（${m.price_in_per_1m}/${m.price_out_per_1m} per 1M tok）
+              </option>
+            ))}
+          </select>
+        </label>
+        <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+          市场规模（PV）
+          <select
+            value={pvNum}
+            onChange={(e) => setPvNum(Number(e.target.value))}
+            style={{ width: '100%', marginTop: 4, padding: '6px 8px', border: '1px solid var(--grid)', borderRadius: 6 }}
+          >
+            <option value={20000}>20,000（最快）</option>
+            <option value={50000}>50,000</option>
+            <option value={100000}>100,000</option>
+          </select>
+        </label>
+        <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
+          Episodes
+          <select
+            value={episodes}
+            onChange={(e) => setEpisodes(Number(e.target.value))}
+            style={{ width: '100%', marginTop: 4, padding: '6px 8px', border: '1px solid var(--grid)', borderRadius: 6 }}
+          >
+            <option value={1}>1（48 次决策）</option>
+            <option value={2}>2（96 次决策）</option>
+          </select>
+        </label>
+      </div>
+
+      <div style={{ marginTop: 10 }}>
+        <button className="tab-btn" onClick={() => setShowPrompt(!showPrompt)}>
+          {showPrompt ? '收起 prompt ▲' : '查看/修改指令 prompt ▼'}
+        </button>
+        {showPrompt && (
+          <div style={{ marginTop: 8 }}>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              rows={10}
+              maxLength={4000}
+              className="mono"
+              style={{ width: '100%', padding: 10, border: '1px solid var(--grid)', borderRadius: 6, resize: 'vertical' }}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+              <button className="tab-btn" onClick={() => setPrompt(defaultPrompt)}>
+                恢复默认
+              </button>
+              <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center' }}>
+                模型每 tick 收到这段指令 + 当前状态 JSON，必须回一个 set_alpha JSON。改动会影响解析成功率
+                ——解析失败会触发 fallback（前一个 alpha → PID → 固定值），实验不会崩。
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
+        <button
+          className="tab-btn active"
+          disabled={!bedrockKey.trim() || taskId != null}
+          onClick={start}
+          style={{ opacity: !bedrockKey.trim() || taskId != null ? 0.5 : 1 }}
+        >
+          {taskId ? '运行中…' : '启动实验'}
+        </button>
+        {taskId && (
+          <>
+            <div style={{ flex: 1, maxWidth: 320, height: 8, background: 'var(--grid)', borderRadius: 4 }}>
+              <div
+                style={{ width: `${progress * 100}%`, height: '100%', background: 'var(--series-1)', borderRadius: 4, transition: 'width .5s' }}
+              />
+            </div>
+            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{detail}</span>
+          </>
+        )}
+        {selected && !taskId && (
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            预计成本 ≈ ${(((episodes * 48 * 550) / 1e6) * selected.price_in_per_1m + ((episodes * 48 * 300) / 1e6) * selected.price_out_per_1m).toFixed(3)} · 时长 ≈ {episodes * 4}–{episodes * 8} 分钟
+          </span>
+        )}
+      </div>
+
+      {error && (
+        <div style={{ marginTop: 10, color: 'var(--critical)', fontSize: 13 }}>✗ {error}</div>
+      )}
+
+      {result && (
+        <div style={{ marginTop: 14 }}>
+          <h3 style={{ fontSize: 14, margin: '0 0 6px' }}>
+            结果：{result.model} · score {result.score_mean.toFixed(2)}
+            {result.custom_prompt && '（自定义 prompt）'}
+          </h3>
+          <table className="data" style={{ fontSize: 12 }}>
+            <thead>
+              <tr>
+                <th>episode</th>
+                <th>得分</th>
+                <th>转化</th>
+                <th>花费</th>
+                <th>实际CPA</th>
+                <th>预算利用</th>
+                <th>fallback率</th>
+              </tr>
+            </thead>
+            <tbody>
+              {result.episodes.map((e) => (
+                <tr key={e.episode}>
+                  <td>{e.episode}</td>
+                  <td style={{ fontWeight: 600 }}>{e.score.toFixed(2)}</td>
+                  <td>{e.conversions}</td>
+                  <td>{e.cost.toFixed(0)}</td>
+                  <td>{e.actual_cpa > 1e6 ? '∞' : e.actual_cpa.toFixed(1)}</td>
+                  <td>{(e.budget_utilization * 100).toFixed(1)}%</td>
+                  <td>{(e.fallback_rate * 100).toFixed(1)}%</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 6 }}>
+            tokens {result.total_input_tokens.toLocaleString()} in /{' '}
+            {result.total_output_tokens.toLocaleString()} out · 对比参考：同场景 PID ≈ 3.2（50k）/
+            6.2（500k），IQL ≈ 17.8（500k）
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

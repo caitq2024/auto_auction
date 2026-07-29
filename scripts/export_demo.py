@@ -41,7 +41,10 @@ COMPARISONS = {
 # LLM baseline runs whose controlled-slot summaries join a comparison's
 # leaderboard: comparison key -> list of (run dir, display name)
 LLM_INTO_LEADERBOARD = {
-    "fullscale_500k": [("outputs/llm_baseline_haiku_500k", "LLM Haiku 4.5")],
+    "fullscale_500k": [
+        ("outputs/llm_baseline_haiku_500k", "LLM Haiku 4.5"),
+        ("outputs/llm_baseline_opus48_500k", "LLM Opus 4.8"),
+    ],
     "midscale_50k": [
         ("outputs/llm_baseline_haiku_v3", "LLM Haiku 4.5"),
         ("outputs/llm_baseline_opus48_v3", "LLM Opus 4.8"),
@@ -53,6 +56,12 @@ LLM_RUNS = {
         "dir": "outputs/llm_baseline_haiku_500k",
         "label": "Claude Haiku 4.5 · 500k 市场",
         "model": "us.anthropic.claude-haiku-4-5",
+        "pv_num": 500000,
+    },
+    "opus48_500k": {
+        "dir": "outputs/llm_baseline_opus48_500k",
+        "label": "Claude Opus 4.8 · 500k 市场",
+        "model": "us.anthropic.claude-opus-4-8",
         "pv_num": 500000,
     },
     "haiku_v3": {

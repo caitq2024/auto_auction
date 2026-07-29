@@ -77,10 +77,12 @@ class LLMBidAgent:
         client: LLMClient,
         config: LLMAgentConfig | None = None,
         prompt_version: str = "v1",
+        system_prompt: str | None = None,
     ):
         self.client = client
         self.config = config or LLMAgentConfig()
         self.prompt_version = prompt_version
+        self.system_prompt = system_prompt or SYSTEM_PROMPT
         self.last_alpha: float | None = None
         self.advertiser: AdvertiserConfig | None = None
         self._pid_fallback = PidAgent()
@@ -152,7 +154,7 @@ class LLMBidAgent:
                 "performance": {"target_cpa": adv.cpa if adv else None},
                 "action_history": {"previous_alpha": self.last_alpha},
             }
-        return f"{SYSTEM_PROMPT}\n\nCurrent state:\n{json.dumps(obs)}"
+        return f"{self.system_prompt}\n\nCurrent state:\n{json.dumps(obs)}"
 
     def _parse_and_validate(self, raw: str) -> float | None:
         data = json.loads(self._extract_first_json_object(raw))

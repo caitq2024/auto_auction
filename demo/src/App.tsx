@@ -4,6 +4,7 @@ import { Explainer } from './components/Explainer'
 import { Leaderboard } from './components/Leaderboard'
 import { LLMTrace } from './components/LLMTrace'
 import { Replay } from './components/Replay'
+import { RunExperiment } from './components/RunExperiment'
 import type { DemoData } from './lib/types'
 
 // categorical slots 1-3 (validated); LLM strategies get slot-4 yellow with
@@ -73,6 +74,7 @@ export default function App() {
       <div style={{ display: 'grid', gap: 20 }}>
         <Explainer samples={data.sample_rows ?? []} />
         <Leaderboard comp={comp} colorOf={colorOf} />
+        <RunExperiment />
         <Replay comp={comp} colorOf={colorOf} />
         <LLMTrace runs={data.llm_runs} />
       </div>
