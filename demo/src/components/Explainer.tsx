@@ -21,7 +21,21 @@ const STRATEGY_INTRO: { name: string; what: string; how: string }[] = [
   {
     name: 'LLM (Claude prompt-only)',
     what: '大语言模型直接当竞价 agent：每个时段把状态发给模型，它回一个 JSON 决策。',
-    how: '模型没有任何针对这个市场的训练，纯靠 prompt 里的市场统计推理。500k 标准市场上 Opus 4.8 已超过 PID（7.63 vs 6.15）；短板是偏保守、预算利用率低——这正是后续蒸馏/强化学习要补的方向。',
+    how: '模型没有任何针对这个市场的训练，纯靠 prompt 里的市场统计推理。500k 标准市场上 Opus 4.8 已超过 PID（7.63 vs 6.15）；短板是偏保守、预算利用率低——prompt 工程和后续蒸馏/强化学习都在补这个方向（见下方 prompt 版本对比）。',
+  },
+]
+
+// prompt 迭代对同一模型得分的影响（500k PV × 2ep，同 seed）
+const PROMPT_VERSIONS = [
+  {
+    ver: 'v1 基础版',
+    desc: '规则 + 尺度提示（pValue 量级、合理 alpha 范围、win_rate 反馈）',
+    rows: [{ model: 'Haiku 4.5', score: '5.74', util: '63%' }, { model: 'Opus 4.8', score: '7.63', util: '35%' }],
+  },
+  {
+    ver: 'v2 pacing 版',
+    desc: 'v1 + 明确的花钱纪律："没花完的预算是纯损失；按 t/48 进度对表，落后就果断加价（×1.3-2）；剩余 >10% 即失败"',
+    rows: [{ model: 'Haiku 4.5', score: '6.55', util: '72%' }, { model: 'Opus 4.8', score: '（重跑中）', util: '—' }],
   },
 ]
 
@@ -219,6 +233,95 @@ export function Explainer({ samples }: { samples: SampleRow[] }) {
               </div>
             ))}
           </div>
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+              Prompt 迭代的直接影响（同模型同市场同 seed，500k PV × 2 episodes）
+            </div>
+            <table className="data" style={{ fontSize: 12 }}>
+              <thead>
+                <tr>
+                  <th>Prompt 版本</th>
+                  <th>改动</th>
+                  <th>模型</th>
+                  <th>score</th>
+                  <th>预算利用</th>
+                </tr>
+              </thead>
+              <tbody>
+                {PROMPT_VERSIONS.flatMap((v) =>
+                  v.rows.map((r, i) => (
+                    <tr key={v.ver + r.model}>
+                      {i === 0 && (
+                        <>
+                          <td rowSpan={v.rows.length} style={{ fontWeight: 600 }}>{v.ver}</td>
+                          <td rowSpan={v.rows.length} style={{ color: 'var(--text-muted)' }}>{v.desc}</td>
+                        </>
+                      )}
+                      <td>{r.model}</td>
+                      <td style={{ fontWeight: 600 }}>{r.score}</td>
+                      <td>{r.util}</td>
+                    </tr>
+                  )),
+                )}
+              </tbody>
+            </table>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '6px 0 0' }}>
+              一句"没花完的预算是纯损失 + 按 t/48 对表"的 pacing 纪律让 Haiku 提升 14%（5.74→6.55，
+              预算利用 63%→72%）。自助实验区可以查看/修改当前 prompt 亲自验证。
+            </p>
+          </div>
+        </Collapsible>
+
+        <Collapsible title="流量从哪来：简易版 vs 复杂版生成器，以及三处数据口径">
+          <p style={{ margin: '0 0 6px', color: 'var(--text-secondary)' }}>
+            AuctionNet 提供两种流量（PV + pValue）生成器，本平台目前使用<b>简易版</b>：
+          </p>
+          <table className="data" style={{ fontSize: 12 }}>
+            <thead>
+              <tr>
+                <th></th>
+                <th>简易版（本平台在用）</th>
+                <th>复杂版（ModelPvGen）</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style={{ fontWeight: 600 }}>原理</td>
+                <td>参数化公式：写死的时段流量曲线 + 正态扰动生成 pValue</td>
+                <td>深度生成模型：预训练神经网络 checkpoint，生成带特征结构的流量</td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: 600 }}>保真度</td>
+                <td>统计形状近似真实</td>
+                <td>更接近真实分布（pValue 均值约为简易版 3 倍，市场更"便宜"）</td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: 600 }}>速度</td>
+                <td>毫秒级</td>
+                <td>CPU 约 2 分钟/episode</td>
+              </tr>
+              <tr>
+                <td style={{ fontWeight: 600 }}>硬限制</td>
+                <td>PV 数量任意（500k 无压力）</td>
+                <td>checkpoint 内置上限 10.5 万 PV/episode，跑不了 500k 标准市场</td>
+              </tr>
+            </tbody>
+          </table>
+          <p style={{ margin: '8px 0 6px', color: 'var(--text-secondary)' }}>
+            <b>为什么用简易版</b>：① AuctionNet 官方评测入口就用它，保持与官方基准的可比性；
+            ② 复杂版撑不起 500k 规模。<b>更好的替代已在路上</b>：官方发布的 21 天预生成数据
+            （93GB，即复杂版生成器在 500k 规模的产物）已全部下载并校验，下一步接入
+            ReplayTrafficGenerator——在线模拟直接使用官方流量，对手照常实时竞价，等于免费获得
+            "复杂版 500k 流量"。
+          </p>
+          <p style={{ margin: 0, color: 'var(--text-secondary)' }}>
+            <b>三处数据口径</b>，看表时请注意：① <b>策略排行榜与 Episode 回放</b> = 简易版流量 +
+            48 广告主<b>在线模拟</b>（对手实时反应）；② <b>自助实验</b> = 同口径①（你的 LLM
+            进同一个市场）；③ 交叉复核（见 GitHub 仓库 scripts/verify_on_official.py）= 官方
+            period-7 数据的<b>离线回放</b>（对手出价冻结、期望转化口径）——分数与①不可直接比大小，
+            只用于验证相对排序。period-7 复核结果与排行榜排序一致：IQL 34.3 &gt; LLM Haiku 27.9
+            &gt; LLM Opus 14.0 &gt; PID 5.4 &gt; DT 2.8。
+          </p>
         </Collapsible>
       </div>
     </div>

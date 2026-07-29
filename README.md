@@ -8,11 +8,18 @@
 |---|---|
 | 内部模拟器核心（GSP、预算控制、RNG 管理、多受控 agent） | ✅ `src/adsim/`，32 个测试全过，与 upstream 锚点 parity 对齐 |
 | 策略：PID / Fixed / IQL 等 upstream checkpoint / 自训 DT / LLM | ✅ `agents/registry.py`，统一接口 |
-| LLM 竞价 agent（每时段一次结构化决策 + 校验 + 三级 fallback + 轨迹导出） | ✅ `agents/llm.py`，支持 Bedrock（含 BYO API key 的 BearerTokenClient） |
+| LLM 竞价 agent（每时段一次结构化决策 + 校验 + 三级 fallback + 轨迹导出） | ✅ `agents/llm.py`，支持 Bedrock（含 BYO API key 的 BearerTokenClient，推理模型 120s 超时 + 重试加固） |
+| Prompt 工程闭环（v1 基础 → v2 pacing 纪律，得分可量化对比） | ✅ Haiku 500k：5.74 → 6.55，预算利用 63% → 72% |
 | 多策略配对比较（同市场同随机数、bootstrap CI、markdown 报告） | ✅ `adsim compare` CLI |
-| DT 训练管道（模拟器自产数据 → upstream DT 训练 → 接回评估） | ✅ `scripts/train_dt_baseline.py` |
-| SFT 数据导出（教师轨迹 → chat JSONL） | ✅ `training/rollout.py` |
-| Web demo（排行榜 / 48-tick 回放 / LLM 决策透视 / 自助实验） | ✅ `demo/`，已集成到团队 aifl-dashboard `/tools/auction-bid` |
+| DT 训练管道（自产/官方数据 → upstream DT 训练 → 接回评估） | ✅ `scripts/train_dt_baseline.py`；结论：官方数据版 1.51 < 自产版 2.23，瓶颈在模仿目标而非数据 |
+| 官方数据集（21 period / 93GB，逐分片下载 + schema 校验） | ✅ `scripts/download_official_data.py`，全部就绪 |
+| 官方分布交叉复核（alpha 序列 threshold replay） | ✅ `scripts/verify_on_official.py`，period-7 排序与模拟器榜一致：IQL 34.3 > Haiku 27.9 > Opus 14.0 > PID 5.4 > DT 2.8 |
+| SFT 数据导出（教师轨迹 → chat JSONL） | ✅ `training/rollout.py`，首批 177 条 |
+| Web demo（排行榜 / 48-tick 回放 / LLM 决策透视 / 自助实验 BYO-key + TLS） | ✅ `demo/`，已集成团队 aifl-dashboard `/tools/auction-bid`（PR #2） |
+
+## 下一步：ReplayTrafficGenerator（进行中）
+
+把官方 21 天预生成数据接成在线模拟的流量源——读官方 CSV 的 PV/pValue 序列，48 个对手照常实时竞价。等于在"复杂版生成器的 500k 流量"上跑完整多智能体模拟（复杂版生成器 checkpoint 上限 10.5 万 PV/episode，跑不了标准市场；官方数据没有这个限制），用于最终确认排行榜与训练数据生成。之后：教师扩样选型（≥10 ep）→ SFT/蒸馏（p5 GPU）→ GRPO。
 
 ### 500k PV 全规模排行榜（当前基线）
 
