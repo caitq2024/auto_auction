@@ -9,7 +9,9 @@ interface ModelInfo {
   price_out_per_1m: number
 }
 
-interface ExperimentResult {
+import type { TickSeries } from '../lib/types'
+
+export interface ExperimentResult {
   model: string
   model_id: string
   pv_num: number
@@ -25,6 +27,7 @@ interface ExperimentResult {
     actual_cpa: number
     budget_utilization: number
     fallback_rate: number
+    ticks: TickSeries
     calls: { tick: number; applied_alpha: number; fallback: string | null; raw_output: string | null }[]
   }[]
 }
@@ -39,7 +42,7 @@ function getUserId(): string {
   return uid
 }
 
-export function RunExperiment() {
+export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) => void }) {
   const [models, setModels] = useState<ModelInfo[]>([])
   const [defaultPrompt, setDefaultPrompt] = useState('')
   const [apiOk, setApiOk] = useState<boolean | null>(null)
@@ -116,8 +119,10 @@ export function RunExperiment() {
         if (t.status !== 'running') {
           if (pollRef.current) window.clearInterval(pollRef.current)
           setTaskId(null)
-          if (t.status === 'done') setResult(t.result)
-          else setError(t.error ?? '未知错误')
+          if (t.status === 'done') {
+            setResult(t.result)
+            if (t.result) onResult?.(t.result)
+          } else setError(t.error ?? '未知错误')
         }
       }, 2000)
     } catch (e) {
@@ -263,6 +268,9 @@ export function RunExperiment() {
           <h3 style={{ fontSize: 14, margin: '0 0 6px' }}>
             结果：{result.model} · score {result.score_mean.toFixed(2)}
             {result.custom_prompt && '（自定义 prompt）'}
+            <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--good)', marginLeft: 10 }}>
+              ✓ 已加入下方排行榜与 Episode 回放
+            </span>
           </h3>
           <table className="data" style={{ fontSize: 12 }}>
             <thead>

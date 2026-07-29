@@ -4,8 +4,8 @@ import { Explainer } from './components/Explainer'
 import { Leaderboard } from './components/Leaderboard'
 import { LLMTrace } from './components/LLMTrace'
 import { Replay } from './components/Replay'
-import { RunExperiment } from './components/RunExperiment'
-import type { DemoData } from './lib/types'
+import { RunExperiment, type ExperimentResult } from './components/RunExperiment'
+import type { Candidate, DemoData } from './lib/types'
 
 // categorical slots 1-3 (validated); LLM strategies get slot-4 yellow with
 // direct labels/legend always present as the secondary channel
@@ -15,6 +15,8 @@ export default function App() {
   const [data, setData] = useState<DemoData | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [compKey, setCompKey] = useState<string>('')
+  // user-launched experiments, keyed by target comparison
+  const [userRuns, setUserRuns] = useState<{ compKey: string; candidate: Candidate }[]>([])
 
   useEffect(() => {
     fetch('./demo_data.json')
@@ -26,7 +28,43 @@ export default function App() {
       .catch((e) => setError(String(e)))
   }, [])
 
-  const comp = data?.comparisons.find((c) => c.key === compKey) ?? data?.comparisons[0]
+  const baseComp = data?.comparisons.find((c) => c.key === compKey) ?? data?.comparisons[0]
+
+  // splice user experiments into the current comparison (nearest pv scale:
+  // >=200k joins the 500k board, else the 50k board), re-ranked by score
+  const comp = useMemo(() => {
+    if (!baseComp) return baseComp
+    const extra = userRuns.filter((r) => r.compKey === baseComp.key).map((r) => r.candidate)
+    if (!extra.length) return baseComp
+    return {
+      ...baseComp,
+      candidates: [...baseComp.candidates, ...extra].sort((a, b) => b.score_mean - a.score_mean),
+    }
+  }, [baseComp, userRuns])
+
+  const onExperimentResult = (r: ExperimentResult) => {
+    const targetKey = r.pv_num >= 200000 ? 'fullscale_500k' : 'midscale_50k'
+    const candidate: Candidate = {
+      id: `user_${r.model}_${Date.now()}`,
+      name: `⭐ 你的实验 · ${r.model}${r.custom_prompt ? ' (改版prompt)' : ''}`,
+      score_mean: r.score_mean,
+      conversions_mean: r.episodes.reduce((s, e) => s + e.conversions, 0) / r.episodes.length,
+      actual_cpa_mean: r.episodes.reduce((s, e) => s + e.actual_cpa, 0) / r.episodes.length,
+      budget_utilization_mean:
+        r.episodes.reduce((s, e) => s + e.budget_utilization, 0) / r.episodes.length,
+      episodes: r.episodes.map((e) => ({
+        episode: e.episode,
+        score: e.score,
+        conversions: e.conversions,
+        cost: e.cost,
+        actual_cpa: e.actual_cpa,
+        budget_utilization: e.budget_utilization,
+        ticks: e.ticks,
+      })),
+    }
+    setUserRuns((prev) => [...prev, { compKey: targetKey, candidate }])
+    setCompKey(targetKey)
+  }
 
   // color follows the entity across scenario switches (never repainted by
   // rank); variants of one strategy ("DT (自训 500k/50k)") share a family slot
@@ -41,6 +79,7 @@ export default function App() {
       }
     }
     return (id: string) => {
+      if (id.startsWith('user_')) return '#e87ba4' // user runs: fixed magenta slot
       const cand = data?.comparisons.flatMap((c) => c.candidates).find((x) => x.id === id)
       return ids.get(family(cand?.name ?? id)) ?? SERIES[0]
     }
@@ -74,7 +113,7 @@ export default function App() {
       <div style={{ display: 'grid', gap: 20 }}>
         <Explainer samples={data.sample_rows ?? []} />
         <Leaderboard comp={comp} colorOf={colorOf} />
-        <RunExperiment />
+        <RunExperiment onResult={onExperimentResult} />
         <Replay comp={comp} colorOf={colorOf} />
         <LLMTrace runs={data.llm_runs} />
       </div>

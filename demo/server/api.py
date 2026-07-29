@@ -146,6 +146,27 @@ def _run_experiment(task_id: str, req: ExperimentRequest, key: str) -> None:
             calls = [asdict(c) for c in agent.trajectory]
             for c in calls:
                 c.pop("prompt", None)  # keep payload small; obs shown from raw output side
+            # tick series in the same shape as demo_data.json so the
+            # frontend can splice this run into leaderboard + replay charts
+            recs = sorted(
+                (r for r in res.tick_records if r.advertiser_id == 0),
+                key=lambda r: r.tick,
+            )
+            cum_cost = cum_conv = 0.0
+            ticks: dict = {"tick": [], "alpha": [], "cost": [], "cum_cost": [],
+                           "conversions": [], "cum_conversions": [], "win_pv": [],
+                           "remaining_budget": []}
+            for r in recs:
+                cum_cost += r.cost
+                cum_conv += r.conversions
+                ticks["tick"].append(r.tick)
+                ticks["alpha"].append(None if r.alpha is None else round(r.alpha, 2))
+                ticks["cost"].append(round(r.cost, 2))
+                ticks["cum_cost"].append(round(cum_cost, 2))
+                ticks["conversions"].append(r.conversions)
+                ticks["cum_conversions"].append(cum_conv)
+                ticks["win_pv"].append(r.exposed_pv)
+                ticks["remaining_budget"].append(round(r.remaining_budget_after, 2))
             episodes_out.append({
                 "episode": ep,
                 "score": round(s.score, 4),
@@ -154,6 +175,7 @@ def _run_experiment(task_id: str, req: ExperimentRequest, key: str) -> None:
                 "actual_cpa": round(s.actual_cpa, 2),
                 "budget_utilization": round(s.budget_utilization, 4),
                 "calls": calls,
+                "ticks": ticks,
                 "fallback_rate": round(
                     sum(1 for c in calls if c["fallback"]) / max(len(calls), 1), 4),
             })
