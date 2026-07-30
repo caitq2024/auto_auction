@@ -1,6 +1,26 @@
 # 任务：与 AWS Infra 结合——竞价实验平台的 Harness 化
 
-状态：Proposal（2026-07-30）· 负责人：caitq · 讨论稿，实施前逐项确认
+状态：实施中（2026-07-30）· H0 ✅ · H1 ✅（判定通过）· 本期范围 H0-H4（H5 不做）
+约束：AgentCore 已开通 · S3 个人账号（adsim-experiments-651433607849）· 教师扩样 6 模型 × 2 ep · 成本上限 $3000
+
+## H1 判定结果（2026-07-30）
+
+| 指标 | 门槛 | 实测 | 判定 |
+|---|---|---|---|
+| 每决策延迟增量 | < 1s | 本地直调 3.6s → AgentCore 4.0s（+0.4s） | ✅ |
+| fallback 率 | — | 0%（48/48 成功） | ✅ |
+| trace | 可替代手工 JSONL | Runtime 日志含 tick/alpha/token；CloudWatch 自动收集 | ✅（Observability 深度接入放 H4） |
+| 成本 | 低于自管 2 倍 | CodeZip 运行时按 vCPU·秒计费，48 决策/episode 约 $0.01 量级 + LLM token | ✅ |
+
+结论：**继续 H2→H4 全量路线**。Runtime：`adsim_bidding_agent-keyeetGBSF`（READY，
+CodeZip PYTHON_3_14，haiku+v2 prompt，环境变量可换模型）。
+
+部署要点（绕过的坑，复现实验用）：
+- CLI `agentcore deploy` 走 CDK/CloudFormation，claw 角色无 cloudformation 权限
+  → 改用 `agentcore package` 出 CodeZip + 直接 `create_agent_runtime` API，零 CFN 依赖；
+- CodeZip 的 entryPoint 是 zip 根相对路径（`main.py`，不带项目子目录）；
+- zip 内二进制是 aarch64/py314 的 → runtime 选 `PYTHON_3_14`；
+- 执行角色复用了账号里已有的 `caitq-west2`（trust policy 已含 bedrock-agentcore）。
 
 ## 1. 问题：现在的"实验"还不是"harness"
 
