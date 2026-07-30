@@ -100,6 +100,10 @@ class LLMCallRecord:
     fallback: str | None  # None | "previous" | "pid" | "fixed"
     latency_sec: float
     error: str | None = None
+    # OTEL-compatible ids (H0): JSONL export today; OTLP/AgentCore
+    # Observability exporter in H4
+    trace_id: str | None = None
+    span_id: str | None = None
 
 
 @dataclass
@@ -134,11 +138,14 @@ class LLMBidAgent:
         self._observation = observation
 
     def reset(self, advertiser: AdvertiserConfig, episode: int) -> None:
+        import secrets
+
         self.advertiser = advertiser
         self.last_alpha = None
         self._pid_fallback.reset(advertiser, episode)
         self.trajectory = []
         self._observation = None
+        self._trace_id = secrets.token_hex(16)  # one trace per episode
 
     def bidding(
         self, tick, pv_values, pvalue_sigmas, history_pvalue_infos, history_bids,
@@ -169,11 +176,14 @@ class LLMBidAgent:
         else:
             applied, fallback = self._fallback(tick, remaining_budget)
 
+        import secrets
+
         self.trajectory.append(
             LLMCallRecord(
                 tick=tick, prompt=prompt, raw_output=raw, parsed_alpha=parsed,
                 applied_alpha=applied, fallback=fallback, latency_sec=round(latency, 3),
                 error=error,
+                trace_id=getattr(self, "_trace_id", None), span_id=secrets.token_hex(8),
             )
         )
         return applied

@@ -1,0 +1,14 @@
+matrix_id: smoke_v1
+base:
+  pv_num: 20000
+  episodes: 1
+  controlled_slot: 0
+  traffic_type: parametric
+seeds: [1]
+candidates:
+  - name: pid
+    strategy: pid
+  - name: fixed120
+    strategy: fixed_alpha
+    kwargs: {alpha: 120}
+output_root: outputs/matrix

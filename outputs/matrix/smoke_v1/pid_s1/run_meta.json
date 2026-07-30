@@ -1,0 +1,10 @@
+{
+  "scenario_id": "smoke_v1_pid_s1",
+  "seed": 1,
+  "episodes": 1,
+  "wall_time_sec": [
+    5.09
+  ],
+  "internal_commit": "628eda2db7ba7fa3c90a4d1492e27cb973f7e06a",
+  "matrix_task": "pid_s1"
+}

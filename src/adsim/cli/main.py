@@ -75,6 +75,28 @@ def cmd_compare(args: argparse.Namespace) -> None:
     print(f"\nreport -> {out / 'comparison_report.md'}")
 
 
+def cmd_run_matrix(args: argparse.Namespace) -> None:
+    from adsim.core.experiment_spec import ExperimentSpec, run_task
+
+    spec = ExperimentSpec.from_yaml(args.spec)
+    tasks = spec.tasks()
+    print(f"matrix {spec.matrix_id}: {len(tasks)} tasks")
+    results = []
+    for i, task in enumerate(tasks, 1):
+        print(f"[{i}/{len(tasks)}] {task.task_id} ...")
+        try:
+            r = run_task(task)
+            print(f"    score_mean={r['score_mean']}")
+            results.append(r)
+        except Exception as e:
+            print(f"    FAILED: {type(e).__name__}: {e}")
+            results.append({"task_id": task.task_id, "error": str(e)[:300]})
+    out = Path(spec.output_root) / spec.matrix_id / "matrix_results.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(results, indent=2, ensure_ascii=False))
+    print(f"results -> {out}")
+
+
 def main() -> None:
     p = argparse.ArgumentParser(prog="adsim")
     sub = p.add_subparsers(dest="cmd", required=True)
@@ -92,6 +114,10 @@ def main() -> None:
     pc.add_argument("--slot", type=int, default=0)
     pc.add_argument("--out", default="outputs/compare")
     pc.set_defaults(fn=cmd_compare)
+
+    pm = sub.add_parser("run-matrix")
+    pm.add_argument("spec")
+    pm.set_defaults(fn=cmd_run_matrix)
 
     args = p.parse_args()
     args.fn(args)

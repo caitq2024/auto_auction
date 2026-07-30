@@ -1,0 +1,12 @@
+{
+  "endpoint": "http://localhost:9000/invocations",
+  "score": 0.52,
+  "conversions": 2.0,
+  "actual_cpa": 195.4,
+  "budget_utilization": 0.135,
+  "decisions": 48,
+  "fallback_rate": 0.0,
+  "latency_mean_sec": 3.608,
+  "latency_p95_sec": 4.571,
+  "wall_sec": 180
+}

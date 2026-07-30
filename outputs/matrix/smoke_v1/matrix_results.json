@@ -1,0 +1,32 @@
+[
+  {
+    "task_id": "pid_s1",
+    "score_mean": 0.6938,
+    "episodes": [
+      {
+        "episode": 0,
+        "score": 0.6938,
+        "conversions": 8.0,
+        "cost": 2716.64,
+        "actual_cpa": 339.58,
+        "budget_utilization": 0.9368
+      }
+    ],
+    "output_dir": "outputs/matrix/smoke_v1/pid_s1"
+  },
+  {
+    "task_id": "fixed120_s1",
+    "score_mean": 0.0,
+    "episodes": [
+      {
+        "episode": 0,
+        "score": 0.0,
+        "conversions": 0.0,
+        "cost": 13.75,
+        "actual_cpa": 137503804076.28,
+        "budget_utilization": 0.0047
+      }
+    ],
+    "output_dir": "outputs/matrix/smoke_v1/fixed120_s1"
+  }
+]
