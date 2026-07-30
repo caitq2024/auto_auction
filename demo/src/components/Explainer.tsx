@@ -39,6 +39,16 @@ const PROMPT_VERSIONS = [
   },
 ]
 
+
+const NOTEBOOKS = [
+  { file: '01_样本观察.ipynb', title: '01 · 样本观察', desc: '读懂 18 列竞价日志与市场结构' },
+  { file: '02_自己实现PID.ipynb', title: '02 · 自己实现 PID', desc: '30 行工业基线 + replay 评估器' },
+  { file: '03_自己实现IQL.ipynb', title: '03 · 自己实现 IQL', desc: '教学版离线 RL：expectile + AWR' },
+  { file: '04_自己实现DT.ipynb', title: '04 · 自己实现 DT', desc: '最小 Decision Transformer 含训练' },
+  { file: '05_自己实现LLM_Agent.ipynb', title: '05 · 自己实现 LLM Agent', desc: 'JSON 决策 + fallback，含免权限 mock 模式' },
+]
+const NB_REPO = 'caitq2024/auto_auction'
+
 function Collapsible({ title, children, defaultOpen = false }: { title: string; children: ReactNode; defaultOpen?: boolean }) {
   const [open, setOpen] = useState(defaultOpen)
   return (
@@ -348,6 +358,36 @@ export function Explainer({ samples }: { samples: SampleRow[] }) {
             暴露 alpha，NaN 被当 0），修复方式是从 bid/pValue 反推有效系数——保留此说明以示
             口径复核本身也需要复核。
           </p>
+        </Collapsible>
+
+        <Collapsible title="动手实验：5 个教学 Notebook（可在 Colab 一键运行）">
+          <p style={{ margin: '0 0 8px', color: 'var(--text-secondary)' }}>
+            从看懂数据到亲手实现 PID / IQL / DT / LLM 四种策略，数据自带、CPU 可跑、每篇 5-15
+            分钟。点 Colab 徽章零安装直接运行（在你自己的 Colab 环境执行，凭证不经过本站）。
+          </p>
+          <table className="data" style={{ fontSize: 12 }}>
+            <tbody>
+              {NOTEBOOKS.map((n) => (
+                <tr key={n.file}>
+                  <td style={{ fontWeight: 600, whiteSpace: 'nowrap' }}>
+                    <a
+                      href={`https://github.com/${NB_REPO}/blob/main/notebooks/${encodeURIComponent(n.file)}`}
+                      target="_blank" rel="noreferrer" style={{ color: 'inherit' }}
+                    >{n.title}</a>
+                  </td>
+                  <td style={{ color: 'var(--text-secondary)' }}>{n.desc}</td>
+                  <td style={{ whiteSpace: 'nowrap' }}>
+                    <a
+                      href={`https://colab.research.google.com/github/${NB_REPO}/blob/main/notebooks/${encodeURIComponent(n.file)}`}
+                      target="_blank" rel="noreferrer"
+                    >
+                      <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open in Colab" style={{ verticalAlign: 'middle' }} />
+                    </a>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </Collapsible>
       </div>
     </div>
