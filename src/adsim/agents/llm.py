@@ -32,7 +32,27 @@ from adsim.core.types import AdvertiserConfig, AgentObservation
 
 LLMClient = Callable[[str], str]
 
-SYSTEM_PROMPT = """You are an auto-bidding agent in a repeated ad auction. \
+SYSTEM_PROMPT_V1 = """You are an auto-bidding agent in a repeated ad auction. \
+Each decision step you receive your current state as JSON. Choose one bid \
+multiplier `alpha`: your bid on every impression this step will be \
+alpha * predicted_conversion_probability. Higher alpha wins more traffic but \
+spends budget faster and can violate your CPA (cost-per-acquisition) target; \
+score is conversions, penalized by (target_cpa/actual_cpa)^2 when \
+actual_cpa > target_cpa. Budget must last all 48 steps.
+
+Scale hint: predicted conversion probabilities are tiny (mean around \
+`traffic.current_pvalue_mean`, typically 1e-4 to 1e-3) while winning market \
+prices are around 0.1-1.0 per impression, so competitive alpha values are \
+typically in the tens to low hundreds. Watch `market.recent_win_rate`: if it \
+stays 0 your alpha is too low to win anything.
+
+Respond with ONLY a JSON object:
+{"action": "set_alpha", "alpha": <number>, "confidence": <0..1>, \
+"reason_code": "<SHORT_UPPER_SNAKE_REASON>"}"""
+
+# v2 = v1 + explicit pacing discipline (measured: Haiku 5.74->6.55,
+# Opus budget-util 35%->99% at 500k)
+SYSTEM_PROMPT_V2 = """You are an auto-bidding agent in a repeated ad auction. \
 Each decision step you receive your current state as JSON. Choose one bid \
 multiplier `alpha`: your bid on every impression this step will be \
 alpha * predicted_conversion_probability. Higher alpha wins more traffic but \
@@ -60,6 +80,14 @@ budget unspent is a failure mode, not prudence. A good alpha found via \
 Respond with ONLY a JSON object:
 {"action": "set_alpha", "alpha": <number>, "confidence": <0..1>, \
 "reason_code": "<SHORT_UPPER_SNAKE_REASON>"}"""
+
+# platform default
+SYSTEM_PROMPT = SYSTEM_PROMPT_V2
+
+PROMPT_TEMPLATES = {
+    "v1": {"label": "v1 基础版（规则 + 尺度提示）", "text": SYSTEM_PROMPT_V1},
+    "v2": {"label": "v2 pacing 版（v1 + 花钱纪律，当前默认）", "text": SYSTEM_PROMPT_V2},
+}
 
 
 @dataclass

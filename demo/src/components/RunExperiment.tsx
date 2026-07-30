@@ -42,9 +42,27 @@ function getUserId(): string {
   return uid
 }
 
+interface PromptTemplate {
+  key: string
+  label: string
+  text: string
+}
+
+const SAVED_KEY = 'adsim.savedPrompts'
+
+function loadSaved(): { name: string; text: string }[] {
+  try {
+    return JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]')
+  } catch {
+    return []
+  }
+}
+
 export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) => void }) {
   const [models, setModels] = useState<ModelInfo[]>([])
   const [defaultPrompt, setDefaultPrompt] = useState('')
+  const [templates, setTemplates] = useState<PromptTemplate[]>([])
+  const [savedPrompts, setSavedPrompts] = useState(loadSaved)
   const [apiOk, setApiOk] = useState<boolean | null>(null)
 
   // Bedrock key: memory only — never persisted, never echoed
@@ -69,6 +87,7 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
         setModels(d.models)
         setDefaultPrompt(d.default_system_prompt)
         setPrompt(d.default_system_prompt)
+        setTemplates(d.prompt_templates ?? [])
         setApiOk(true)
       })
       .catch(() => setApiOk(false))
@@ -208,6 +227,41 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
         </button>
         {showPrompt && (
           <div style={{ marginTop: 8 }}>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 6, alignItems: 'center' }}>
+              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>加载模板：</span>
+              {templates.map((t) => (
+                <button
+                  key={t.key}
+                  className={`tab-btn${prompt === t.text ? ' active' : ''}`}
+                  title={t.label}
+                  onClick={() => setPrompt(t.text)}
+                >
+                  {t.key === 'v1' ? 'v1 基础版' : t.key === 'v2' ? 'v2 pacing版' : t.label}
+                </button>
+              ))}
+              {savedPrompts.map((sp) => (
+                <span key={sp.name} style={{ display: 'inline-flex', alignItems: 'center' }}>
+                  <button
+                    className={`tab-btn${prompt === sp.text ? ' active' : ''}`}
+                    onClick={() => setPrompt(sp.text)}
+                  >
+                    ⭐ {sp.name}
+                  </button>
+                  <button
+                    className="tab-btn"
+                    title={`删除 ${sp.name}`}
+                    style={{ padding: '6px 8px', marginLeft: -1 }}
+                    onClick={() => {
+                      const next = savedPrompts.filter((x) => x.name !== sp.name)
+                      setSavedPrompts(next)
+                      localStorage.setItem(SAVED_KEY, JSON.stringify(next))
+                    }}
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
             <textarea
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
@@ -216,13 +270,25 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
               className="mono"
               style={{ width: '100%', padding: 10, border: '1px solid var(--grid)', borderRadius: 6, resize: 'vertical' }}
             />
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
               <button className="tab-btn" onClick={() => setPrompt(defaultPrompt)}>
                 恢复默认
               </button>
+              <button
+                className="tab-btn"
+                onClick={() => {
+                  const name = window.prompt('给这个 prompt 起个名字（保存在你的浏览器本地）：')?.trim()
+                  if (!name) return
+                  const next = [...savedPrompts.filter((x) => x.name !== name), { name, text: prompt }]
+                  setSavedPrompts(next)
+                  localStorage.setItem(SAVED_KEY, JSON.stringify(next))
+                }}
+              >
+                保存当前 prompt
+              </button>
               <span style={{ fontSize: 11, color: 'var(--text-muted)', alignSelf: 'center' }}>
-                模型每 tick 收到这段指令 + 当前状态 JSON，必须回一个 set_alpha JSON。改动会影响解析成功率
-                ——解析失败会触发 fallback（前一个 alpha → PID → 固定值），实验不会崩。
+                v1→v2 的实测差异见上方"策略简介"栏（Haiku 5.74→6.55）。以任一模板为底修改后可保存
+                （仅存你的浏览器 localStorage）。解析失败会触发 fallback，实验不会崩。
               </span>
             </div>
           </div>

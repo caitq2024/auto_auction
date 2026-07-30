@@ -28,7 +28,8 @@ from pydantic import BaseModel, Field
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "src"))
 
-from adsim.agents.llm import LLMAgentConfig, LLMBidAgent, SYSTEM_PROMPT  # noqa: E402
+from adsim.agents.llm import (LLMAgentConfig, LLMBidAgent,  # noqa: E402
+                              PROMPT_TEMPLATES, SYSTEM_PROMPT)
 from adsim.agents.llm_clients import SELF_SERVE_MODELS, BearerTokenClient  # noqa: E402
 from adsim.core.runner import EpisodeRunner  # noqa: E402
 from adsim.core.scenario import ScenarioConfig  # noqa: E402
@@ -84,6 +85,10 @@ def list_models():
             for k, (mid, pin, pout) in SELF_SERVE_MODELS.items()
         ],
         "default_system_prompt": SYSTEM_PROMPT,
+        "prompt_templates": [
+            {"key": k, "label": v["label"], "text": v["text"]}
+            for k, v in PROMPT_TEMPLATES.items()
+        ],
         "limits": {"max_pv": MAX_PV, "max_episodes": MAX_EPISODES,
                    "max_prompt_chars": MAX_PROMPT_CHARS},
     }
