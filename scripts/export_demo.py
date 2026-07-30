@@ -44,6 +44,7 @@ LLM_INTO_LEADERBOARD = {
     "fullscale_500k": [
         ("outputs/llm_baseline_haiku_500k", "LLM Haiku 4.5"),
         ("outputs/llm_baseline_opus48_500k", "LLM Opus 4.8"),
+        ("outputs/llm_baseline_opus48_500k_v2", "LLM Opus 4.8 · prompt v2 (pacing)"),
     ],
     "midscale_50k": [
         ("outputs/llm_baseline_haiku_v3", "LLM Haiku 4.5"),
@@ -61,6 +62,12 @@ LLM_RUNS = {
     "opus48_500k": {
         "dir": "outputs/llm_baseline_opus48_500k",
         "label": "Claude Opus 4.8 · 500k 市场",
+        "model": "us.anthropic.claude-opus-4-8",
+        "pv_num": 500000,
+    },
+    "opus48_500k_v2": {
+        "dir": "outputs/llm_baseline_opus48_500k_v2",
+        "label": "Opus 4.8 · pacing prompt v2 · 500k",
         "model": "us.anthropic.claude-opus-4-8",
         "pv_num": 500000,
     },
