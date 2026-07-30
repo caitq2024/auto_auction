@@ -1,0 +1,11 @@
+{
+  "scenario_id": "llm_opus48_official_replay",
+  "seed": 1,
+  "episodes": 1,
+  "wall_time_sec": [
+    237.98
+  ],
+  "internal_commit": "40a4d5fb393382d5e37d4336a98ae8038eea70ab",
+  "model": "us.anthropic.claude-opus-4-8",
+  "traffic": "official period-7"
+}

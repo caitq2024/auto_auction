@@ -344,17 +344,18 @@ export function Explainer({ samples }: { samples: SampleRow[] }) {
             </thead>
             <tbody>
               <tr><td>IQL</td><td>17.78（第1）</td><td>34.3（第1）</td><td style={{ fontWeight: 600 }}>39.0（第1）</td></tr>
-              <tr><td>LLM Haiku 4.5</td><td>5.74-6.55（3-4名）</td><td>27.9（第2）</td><td style={{ fontWeight: 600 }}>13.0（第2，CPA 97.5 达标）</td></tr>
-              <tr><td>LLM Opus 4.8</td><td>7.56-7.63（第2）</td><td>14.0（第3）</td><td>—</td></tr>
-              <tr><td>PID</td><td>6.15（第3）</td><td>5.4（第4）</td><td>2.05（第3）</td></tr>
+              <tr><td>LLM Opus 4.8 · v2 prompt</td><td>7.56（第3）</td><td>11.0（第4）</td><td style={{ fontWeight: 600 }}>23.4（第2，27转化 CPA 107）</td></tr>
+              <tr><td>LLM Haiku 4.5 · v2 prompt</td><td>6.55（第4）</td><td>29.5（第2，CPA 98 达标）</td><td style={{ fontWeight: 600 }}>13.0（第3，CPA 97.5 达标）</td></tr>
+              
+              <tr><td>PID</td><td>6.15（第5）</td><td>5.4（第5）</td><td>2.05（第4）</td></tr>
               <tr><td>DT（自训）</td><td>2.23（第5）</td><td>2.8（第5）</td><td>—</td></tr>
             </tbody>
           </table>
           <p style={{ margin: '6px 0 0', color: 'var(--text-secondary)', fontSize: 12 }}>
-            核心结论：<b>三种口径下排序一致——IQL 第一，LLM 稳定第二且显著优于 PID，DT 垫底</b>：
-            排行榜结论不是简易流量的伪影。官方流量在线模拟中 Haiku 拿 13 个转化、CPA 97.5
-            精确压线达标、零 fallback——prompt-only LLM 在最高保真口径下依然稳居 PID 与
-            IQL 之间。注：③a 离线回放曾因脚本 bug 把 IQL 记为 0 分（upstream 适配器不
+            核心结论：<b>三种口径下结构一致——IQL 第一，LLM（v2 prompt，统一版本公平对比）稳定
+            位于 IQL 与 PID 之间，DT 垫底</b>。官方流量在线模拟中 Opus 4.8 拿 27 个转化
+            （score 23.4，直逼 IQL 的 39），Haiku CPA 97.5 精确压线——prompt-only LLM 在最高
+            保真口径下的表现比简易流量口径更强，说明简易市场对 LLM 偏难（价格结构更极端）。注：③a 离线回放曾因脚本 bug 把 IQL 记为 0 分（upstream 适配器不
             暴露 alpha，NaN 被当 0），修复方式是从 bid/pValue 反推有效系数——保留此说明以示
             口径复核本身也需要复核。
           </p>
