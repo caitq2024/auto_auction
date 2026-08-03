@@ -158,9 +158,41 @@ def create_experiment(
             "error": None,
         }
     threading.Thread(
-        target=_run_experiment, args=(task_id, req, key), daemon=True
+        target=_supervise, args=(task_id, req.model_dump(), key), daemon=True
     ).start()
     return {"task_id": task_id}
+
+
+def _supervise(task_id: str, req_dict: dict, key: str) -> None:
+    """Spawn the experiment as a child process; mirror its progress into
+    _TASKS every second. The API process stays responsive regardless of how
+    CPU-bound the simulation gets."""
+    import multiprocessing as mp
+
+    t = _TASKS[task_id]
+    ctx = mp.get_context("spawn")
+    with ctx.Manager() as mgr:
+        shared = mgr.dict(status="running", progress=0.0, detail="启动中",
+                          result=None, error=None)
+        proc = ctx.Process(target=_worker_main, args=(req_dict, key, shared),
+                           daemon=True)
+        proc.start()
+        while proc.is_alive():
+            proc.join(timeout=1.0)
+            for k in ("progress", "detail"):
+                t[k] = shared.get(k, t[k])
+        # final state
+        for k in ("progress", "detail", "result", "error"):
+            if shared.get(k) is not None:
+                t[k] = shared[k]
+        if shared.get("error"):
+            t["status"] = "error"
+        elif shared.get("result") is not None:
+            t["status"] = "done"
+            t["progress"] = 1.0
+        else:
+            t["status"] = "error"
+            t["error"] = t.get("error") or "实验进程异常退出"
 
 
 @app.get("/api/experiments/{task_id}")
@@ -172,10 +204,20 @@ def get_experiment(task_id: str, x_user_id: str = Header("anonymous"),
     return {k: t[k] for k in ("status", "progress", "detail", "result", "error")}
 
 
-def _run_experiment(task_id: str, req: ExperimentRequest, key: str) -> None:
-    t = _TASKS[task_id]
-    total_calls = 48 * req.episodes
+def _worker_main(req_dict: dict, key: str, shared) -> None:
+    """Runs in a separate PROCESS. Heavy simulation cannot starve the API
+    event loop there. Progress/result/error go through the Manager dict."""
     try:
+        req = ExperimentRequest(**req_dict)
+        _run_experiment_body(req, key, shared)
+    except Exception as e:
+        shared["status"] = "error"
+        shared["error"] = f"{type(e).__name__}: {e}"[:300]
+
+
+def _run_experiment_body(req: ExperimentRequest, key: str, t) -> None:
+    total_calls = 48 * req.episodes
+    if True:
         model_id = SELF_SERVE_MODELS[req.model][0]
         if key:
             client = BearerTokenClient(model_id=model_id, api_key=key)
@@ -265,9 +307,4 @@ def _run_experiment(task_id: str, req: ExperimentRequest, key: str) -> None:
         t["status"] = "done"
         t["progress"] = 1.0
         t["detail"] = "完成"
-    except PermissionError as e:
-        t["status"] = "error"
-        t["error"] = str(e)
-    except Exception as e:  # never include the key in errors
-        t["status"] = "error"
-        t["error"] = f"{type(e).__name__}: {e}"[:300]
+
