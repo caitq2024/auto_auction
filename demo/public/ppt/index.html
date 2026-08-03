@@ -1251,28 +1251,65 @@
       <div class="t-meta">我们服务的客户,多数是广告主 · Advertisers</div>
       <h2 style="font-family:var(--sans),var(--sans-zh);font-weight:200;font-size:min(5.8vw,10.2vh);line-height:1.05;letter-spacing:-.025em">广告主关心两件事</h2>
     </div>
-    <div class="duo-compare" style="margin-top:6vh">
+    <div class="duo-compare" style="margin-top:4.6vh">
       <div class="col">
         <div class="col-tag"><span class="num">01</span>BUDGET ALLOCATION</div>
         <div class="col-ttl">预算分配</div>
-        <p class="col-desc">决定「钱花在哪」。一个 campaign 的总预算,如何拆分给旗下的各个 adgroup:表现好的多给,表现差的少给甚至砍掉,目标是实现最高的 ROI,比如最高的总转化。</p>
-        <ul class="col-list">
-          <li>输入:各 adgroup 的历史花费、曝光、点击、转化表现</li>
-          <li>输出:每个 adgroup 的预算份额(加和 = 1)</li>
-          <li>按天决策,今天普遍由投放优化师人工调整</li>
-        </ul>
+        <p class="col-desc" style="max-width:none">决定「钱花在哪」。一个 campaign 的总预算,如何拆分给旗下各个 adgroup:表现好的多给,差的少给甚至砍掉,目标是最高的 ROI,比如最高的总转化。按天决策,今天普遍由优化师人工调整。</p>
+        <div style="margin-top:auto;display:flex;flex-direction:column;gap:1vh">
+          <div style="display:flex;justify-content:space-between;align-items:baseline">
+            <span class="t-meta">CAMPAIGN 总预算 $1,000 / 天</span>
+          </div>
+          <div style="height:2.6vh;background:var(--ink);width:100%"></div>
+          <div style="display:flex;justify-content:center;gap:6vw;font-family:var(--mono);font-size:14px;color:var(--text-helper)">
+            <span>↓</span><span>↓</span><span>↓</span>
+          </div>
+          <div style="display:flex;gap:6px;width:100%">
+            <div style="flex:25;background:var(--grey-1);padding:1.2vh 1vw;display:flex;flex-direction:column;gap:.4vh">
+              <span class="t-meta">AD_A</span>
+              <span style="font-family:var(--sans);font-weight:300;font-size:max(17px,1.2vw)">$250</span>
+              <span class="t-helper" style="font-weight:500">转化 12</span>
+            </div>
+            <div style="flex:60;background:var(--accent);color:#fff;padding:1.2vh 1vw;display:flex;flex-direction:column;gap:.4vh">
+              <span class="t-meta" style="color:rgba(255,255,255,.75)">AD_B · 加码</span>
+              <span style="font-family:var(--sans);font-weight:300;font-size:max(17px,1.2vw)">$600</span>
+              <span class="t-helper" style="color:rgba(255,255,255,.85);font-weight:500">转化 35 ↑</span>
+            </div>
+            <div style="flex:15;background:var(--grey-1);padding:1.2vh 1vw;display:flex;flex-direction:column;gap:.4vh">
+              <span class="t-meta">AD_C</span>
+              <span style="font-family:var(--sans);font-weight:300;font-size:max(17px,1.2vw)">$150</span>
+              <span class="t-helper" style="font-weight:500">转化 3 ↓</span>
+            </div>
+          </div>
+          <div class="t-helper" style="font-weight:500;border-top:1px solid var(--border-subtle);padding-top:1vh">块宽 = 预算份额(加和 = 1):向高转化的 adgroup 倾斜,总转化最大</div>
+        </div>
       </div>
       <span class="vrule"></span>
       <div class="col accent">
         <div class="col-tag"><span class="num">02</span>AUTO BIDDING</div>
         <div class="col-ttl">广告竞价</div>
-        <p class="col-desc">决定「每次曝光出多少钱」。以搜索关键词为例:用户每发起一次搜索,平台就对这次展示机会发起一次实时拍卖,所有广告主的竞价系统同时出价,价高者获得广告位。策略要在预算约束下,把钱花在转化概率最高的流量上,并撑满一整天。</p>
-        <ul class="col-list">
-          <li>输入:该次流量的价值预估 + 剩余预算 + 目标 CPA</li>
-          <li>输出:这一次展示机会的具体出价</li>
-          <li>按 GSP 规则扣费:赢了坑位,按下一名的出价扣钱</li>
-          <li>一天几十万次决策,只能由算法自动完成</li>
-        </ul>
+        <p class="col-desc" style="max-width:none">决定「每次曝光出多少钱」。以搜索关键词为例:用户每发起一次搜索,平台就对这次展示机会发起一次实时拍卖,所有广告主同时出价,价高者得。一天几十万次决策,只能由算法自动完成。</p>
+        <div style="margin-top:auto;display:flex;flex-direction:column;gap:1vh">
+          <div class="t-meta">用户搜索「跑步鞋」→ 一次实时拍卖</div>
+          <div style="display:grid;grid-template-columns:auto 1fr auto;gap:.8vh 1vw;align-items:center;font-family:var(--mono)">
+            <span class="t-meta" style="color:var(--accent);font-weight:600">我们</span>
+            <div style="height:1.9vh;background:var(--grey-1)"><div style="height:100%;width:100%;background:var(--accent)"></div></div>
+            <span class="t-helper" style="font-weight:600;color:var(--accent);white-space:nowrap">5.2 · 坑位1 · 扣 4.8</span>
+            <span class="t-meta">对手B</span>
+            <div style="height:1.9vh;background:var(--grey-1)"><div style="height:100%;width:92%;background:var(--ink)"></div></div>
+            <span class="t-helper" style="font-weight:500;white-space:nowrap">4.8 · 坑位2 · 扣 4.1</span>
+            <span class="t-meta">对手C</span>
+            <div style="height:1.9vh;background:var(--grey-1)"><div style="height:100%;width:79%;background:var(--ink)"></div></div>
+            <span class="t-helper" style="font-weight:500;white-space:nowrap">4.1 · 坑位3 · 扣 3.0</span>
+            <span class="t-meta">对手D</span>
+            <div style="height:1.9vh;background:var(--grey-1)"><div style="height:100%;width:58%;background:var(--grey-2)"></div></div>
+            <span class="t-helper" style="font-weight:500;color:var(--text-placeholder);white-space:nowrap">3.0 · 未获得</span>
+            <span class="t-meta">对手E</span>
+            <div style="height:1.9vh;background:var(--grey-1)"><div style="height:100%;width:29%;background:var(--grey-2)"></div></div>
+            <span class="t-helper" style="font-weight:500;color:var(--text-placeholder);white-space:nowrap">1.5 · 未获得</span>
+          </div>
+          <div class="t-helper" style="font-weight:500;border-top:1px solid var(--border-subtle);padding-top:1vh">前 3 名获得坑位,GSP 扣费:按下一名的出价扣钱;策略要在预算约束下,把钱花在转化概率最高的流量上,并撑满一整天</div>
+        </div>
       </div>
     </div>
   </div>
