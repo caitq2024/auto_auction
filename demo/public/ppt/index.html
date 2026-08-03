@@ -1224,7 +1224,7 @@
     <canvas class="ascii-bg" aria-hidden="true"></canvas>
     <div class="chrome-min">
       <div class="l">大模型 × 广告投放 · Internal Field Note</div>
-      <div class="r">SS · 26.08.03 · 01 / 10</div>
+      <div class="r">SS · 26.08.03 · 01 / 05</div>
     </div>
     <div style="flex:1;padding:0;display:grid;grid-template-rows:auto 1fr auto;gap:2.6vh">
       <div data-anim="kicker" class="t-meta" style="color:rgba(255,255,255,.78);letter-spacing:.22em">AGENTIC ADVERTISING &amp; AUTO BIDDING</div>
@@ -1245,7 +1245,7 @@
   <div class="canvas-card">
     <div class="chrome-min">
       <div class="l">Context · 客户与场景</div>
-      <div class="r">02 / 10</div>
+      <div class="r">02 / 05</div>
     </div>
     <div data-anim="line" style="display:flex;flex-direction:column;gap:1.4vh">
       <div class="t-meta">我们服务的客户,多数是广告主 · Advertisers</div>
@@ -1255,49 +1255,24 @@
       <div class="col">
         <div class="col-tag"><span class="num">01</span>BUDGET ALLOCATION</div>
         <div class="col-ttl">预算分配</div>
-        <p class="col-desc">决定「钱花在哪」。把每天的总预算拆分到各个 campaign / adgroup,目标是让明天的转化最大化。</p>
+        <p class="col-desc">决定「钱花在哪」。一个 campaign 的总预算,如何拆分给旗下的各个 adgroup:表现好的多给,表现差的少给甚至砍掉,目标是实现最高的 ROI,比如最高的总转化。</p>
         <ul class="col-list">
-          <li>输入:各 campaign 的历史花费、点击、转化表现</li>
+          <li>输入:各 adgroup 的历史花费、曝光、点击、转化表现</li>
           <li>输出:每个 adgroup 的预算份额(加和 = 1)</li>
-          <li>今天普遍由投放优化师人工调整</li>
+          <li>按天决策,今天普遍由投放优化师人工调整</li>
         </ul>
       </div>
       <span class="vrule"></span>
       <div class="col accent">
         <div class="col-tag"><span class="num">02</span>AUTO BIDDING</div>
         <div class="col-ttl">广告竞价</div>
-        <p class="col-desc">决定「每次曝光出多少钱」。以搜索关键词为例,每一次广告展示机会都要实时出价,价高者得。</p>
+        <p class="col-desc">决定「每次曝光出多少钱」。以搜索关键词为例:用户每发起一次搜索,平台就对这次展示机会发起一次实时拍卖,所有广告主的竞价系统同时出价,价高者获得广告位。策略要在预算约束下,把钱花在转化概率最高的流量上,并撑满一整天。</p>
         <ul class="col-list">
-          <li>输入:实时流量价值预估 + 剩余预算 + 目标 CPA</li>
-          <li>输出:该次展示机会的出价</li>
-          <li>按 GSP 规则扣费(按下一名出价扣钱)</li>
+          <li>输入:该次流量的价值预估 + 剩余预算 + 目标 CPA</li>
+          <li>输出:这一次展示机会的具体出价</li>
+          <li>按 GSP 规则扣费:赢了坑位,按下一名的出价扣钱</li>
+          <li>一天几十万次决策,只能由算法自动完成</li>
         </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 03 · S09 Statement · 客户诉求 ============ -->
-<section class="slide dark" data-animate="statement" data-layout="S09">
-  <div class="canvas-card">
-    <span class="dot-mat" style="position:absolute;right:0;top:0;width:32vw;height:32vw;color:var(--accent-bright)"></span>
-    <span class="ring-mat" style="position:absolute;left:5vw;bottom:6vh;width:14vw;height:14vw;opacity:.3"></span>
-    <div class="chrome-min">
-      <div class="l">Demand · 客户诉求</div>
-      <div class="r">03 / 10</div>
-    </div>
-    <div data-anim="line" class="t-meta" style="color:rgba(255,255,255,.62)">WHAT CUSTOMERS WANT · 2026</div>
-    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:3vh">
-      <h1 data-anim="up" style="font-family:var(--sans),var(--sans-zh);font-weight:200;font-size:min(6.4vw,11.2vh);line-height:1.14;letter-spacing:-.03em;max-width:78vw">客户近期普遍想让<br/><span style="color:var(--accent-bright)">大模型</span>来做这两件事</h1>
-      <div data-anim="up" style="display:flex;gap:4vw;border-top:1px solid rgba(255,255,255,.18);padding-top:2.6vh;max-width:60vw">
-        <div style="flex:1">
-          <div class="t-cat" style="color:rgba(255,255,255,.7)">人力成本优化</div>
-          <p style="font-size:max(16px,1vw);line-height:1.55;color:rgba(255,255,255,.78);font-weight:400;margin-top:1vh">替代投放优化师的日常调价、调预算操作</p>
-        </div>
-        <div style="flex:1">
-          <div class="t-cat" style="color:rgba(255,255,255,.7)">ROI 提升</div>
-          <p style="font-size:max(16px,1vw);line-height:1.55;color:rgba(255,255,255,.78);font-weight:400;margin-top:1vh">同样预算下拿到更多转化,或同样转化花更少的钱</p>
-        </div>
       </div>
     </div>
   </div>
@@ -1308,7 +1283,7 @@
   <div class="canvas-card">
     <div class="chrome-min">
       <div class="l">Problem · 落地卡点</div>
-      <div class="r">04 / 10</div>
+      <div class="r">03 / 05</div>
     </div>
     <div data-anim="line" style="display:flex;flex-direction:column;gap:1.4vh">
       <div class="t-meta">但真要落地,客户先问两个问题</div>
@@ -1328,7 +1303,7 @@
       <div class="col">
         <div class="col-tag"><span class="num">Q2</span>OFFLINE EVAL</div>
         <div class="col-ttl">离线怎么验?</div>
-        <p class="col-desc">客户不可能拿真实预算做 A/B,只能提供离线数据。一个新策略的效果,怎么在不花真钱的前提下模拟出来?</p>
+        <p class="col-desc">客户不会上来就用真实预算做 A/B,先能给到的只有离线数据。一个新策略的效果,怎么在不花真钱的前提下模拟出来?</p>
         <ul class="col-list">
           <li>离线数据 → 反事实评估 / 市场回放</li>
           <li>换策略不换流量,保证对比公平</li>
@@ -1343,7 +1318,7 @@
   <div class="canvas-card">
     <div class="chrome-min">
       <div class="l">Platform 01 · Budget Allocation</div>
-      <div class="r">05 / 10</div>
+      <div class="r">04 / 05</div>
     </div>
     <div data-anim="line" style="display:flex;flex-direction:column;gap:1.4vh">
       <div class="t-meta">平台一 · 已集成 AIFL 内部网站</div>
@@ -1380,7 +1355,7 @@
   <div class="canvas-card">
     <div class="chrome-min">
       <div class="l">Platform 02 · Auto Bidding</div>
-      <div class="r">06 / 10</div>
+      <div class="r">05 / 05</div>
     </div>
     <div data-anim="line" style="display:flex;flex-direction:column;gap:1.4vh">
       <div class="t-meta" style="color:rgba(255,255,255,.62)">平台二 · 基于阿里开源 AuctionNet(NeurIPS 2024)</div>
@@ -1422,151 +1397,6 @@
         <i data-lucide="message-square-code" class="lucide"></i>
         <div class="ttl">Bedrock + Prompt 直评</div>
         <div class="desc">大模型加 prompt 直接当竞价 agent,支持自带 API key 自助评测</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 07 · S07 H-Bar · 排行榜结果 ============ -->
-<section class="slide light" data-animate="bar-grow" data-layout="S07">
-  <div class="canvas-card">
-    <div class="chrome-min">
-      <div class="l">Result · 500k PV 全规模</div>
-      <div class="r">07 / 10</div>
-    </div>
-    <div data-anim="line" style="display:flex;flex-direction:column;gap:1.4vh">
-      <div class="t-meta">竞赛得分 · NeurIPS 口径:CPA 达标 = 转化数,超标平方惩罚 · simulated</div>
-      <h2 style="font-family:var(--sans),var(--sans-zh);font-weight:200;font-size:min(5.2vw,9.2vh);line-height:1.05;letter-spacing:-.025em">大模型现在排第 <span style="color:var(--accent);font-weight:300">2–3</span> 名</h2>
-    </div>
-    <div data-anim="up" style="display:flex;align-items:center;gap:1vw;margin-top:3.6vh">
-      <div class="t-cat" style="white-space:nowrap">STRATEGY LEADERBOARD</div>
-      <div style="height:1px;background:var(--border-subtle);flex:1"></div>
-    </div>
-    <div class="h-bar-chart" style="margin-top:2.4vh">
-      <span class="row-lbl">IQL(强化学习基线)</span><span class="row-track"><span class="row-fill" style="width:100%"></span></span><span class="row-val">17.78</span>
-      <span class="row-lbl" style="color:var(--accent);font-weight:600">LLM · Opus 4.8</span><span class="row-track"><span class="row-fill accent" style="width:43%"></span></span><span class="row-val">7.63</span>
-      <span class="row-lbl" style="color:var(--accent);font-weight:600">LLM · Opus 4.8 v2</span><span class="row-track"><span class="row-fill accent" style="width:42.5%"></span></span><span class="row-val">7.56</span>
-      <span class="row-lbl">PID(传统控制)</span><span class="row-track"><span class="row-fill grey" style="width:34.6%"></span></span><span class="row-val">6.15</span>
-      <span class="row-lbl" style="color:var(--accent);font-weight:600">LLM · Haiku 4.5</span><span class="row-track"><span class="row-fill accent" style="width:32.3%"></span></span><span class="row-val">5.74</span>
-      <span class="row-lbl">DT(自训 500k)</span><span class="row-track"><span class="row-fill grey" style="width:12.5%"></span></span><span class="row-val">2.23</span>
-    </div>
-    <div style="margin-top:auto;padding-top:2vh;border-top:1px solid var(--border-subtle);display:flex;justify-content:space-between;gap:3vw" class="nav-safe-bottom-tight">
-      <p class="t-body-sm" style="max-width:60ch">prompt-only 的大模型低于竞赛最佳实践的强化学习模型,但已稳定强于 PID 与自训 DT——而且 prompt v2 一次迭代就把转化从 9.5 拉到 18.0。</p>
-      <div class="t-meta" style="white-space:nowrap">SEED 1 · 同市场同流量配对</div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 08 · S22 Image Hero · 现场看一眼 ============ -->
-<section class="slide light" data-animate="image-hero" data-layout="S22">
-  <div class="canvas-card" style="padding:0;display:flex;flex-direction:column;overflow:hidden">
-    <div data-anim="img" style="position:relative;flex:0 0 58%;overflow:hidden;background:var(--paper);border-bottom:1px solid var(--border-subtle)">
-      <img data-image-slot="s22-hero-21x9" src="images/09-leaderboard.png" alt="AdSim 竞价策略实验台 · 策略排行榜" loading="eager"
-           style="position:absolute;inset:0;width:100%;height:92%;top:8%;object-fit:contain;object-position:center top;padding:0 4vw;box-sizing:border-box">
-      <div class="chrome-min" style="position:absolute;top:0;left:0;right:0;color:var(--text-helper);padding:5.6vh 5vw 0">
-        <div class="l">Live Demo · AdSim 竞价策略实验台</div>
-        <div class="r">08 / 10</div>
-      </div>
-      <div data-anim="title-block" style="position:absolute;right:5vw;bottom:3vh;background:var(--accent);color:#fff;padding:1.8vh 2vw;max-width:30vw">
-        <div style="font-family:var(--sans),var(--sans-zh);font-weight:200;font-size:min(4.2vw,7.4vh);line-height:1.06;letter-spacing:-.03em">现场<span style="font-style:italic;font-weight:300">看一眼</span></div>
-      </div>
-    </div>
-    <div data-anim="kpi" class="image-hero-body" style="padding:4.4vh 5vw 4.4vh">
-      <div style="max-width:46ch;font-family:var(--sans),var(--sans-zh);font-size:max(16px,1.15vw);line-height:1.6;font-weight:400;color:var(--text-primary)">排行榜、48 时段竞价回放、LLM 决策透视都已可视化,浏览器直接打开:<br/><span class="t-meta" style="color:var(--accent);font-size:max(15px,.95vw);letter-spacing:.06em">caitq2024.github.io/auto_auction</span></div>
-      <div class="image-hero-stats" style="gap:3vw">
-        <div style="display:flex;flex-direction:column;gap:.6vh"><div style="height:1px;background:var(--ink)"></div><div class="t-meta">LLM 最高排名</div><div style="font-family:var(--sans);font-weight:200;font-size:min(4.2vw,7vh);line-height:.95;letter-spacing:-.04em;color:var(--accent)">No.2</div><p class="body-sm" style="margin-top:auto">Opus 4.8 · prompt-only</p></div>
-        <div style="display:flex;flex-direction:column;gap:.6vh"><div style="height:1px;background:var(--ink)"></div><div class="t-meta">同台策略</div><div style="font-family:var(--sans);font-weight:200;font-size:min(4.2vw,7vh);line-height:.95;letter-spacing:-.04em">6</div><p class="body-sm" style="margin-top:auto">RL / PID / DT / LLM</p></div>
-        <div style="display:flex;flex-direction:column;gap:.6vh"><div style="height:1px;background:var(--ink)"></div><div class="t-meta">单局规模</div><div style="font-family:var(--sans);font-weight:200;font-size:min(4.2vw,7vh);line-height:.95;letter-spacing:-.04em">500k<span style="font-size:.4em;font-weight:300;opacity:.6">PV</span></div><p class="body-sm" style="margin-top:auto">论文标准市场口径</p></div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 09 · S19 Four Cards · Future Work ============ -->
-<section class="slide dark" data-animate="four-cards" data-layout="S19">
-  <div class="canvas-card">
-    <div class="chrome-min">
-      <div class="l">Next · Future Work</div>
-      <div class="r">09 / 10</div>
-    </div>
-    <div data-anim="line" style="display:flex;flex-direction:column;gap:2vh">
-      <div style="width:80px;height:2px;background:var(--accent-bright)"></div>
-      <div style="display:flex;flex-direction:column;gap:1.4vh">
-        <div class="t-meta" style="color:rgba(255,255,255,.62)">从评测平台,到客户面前的演示工具</div>
-        <h2 style="font-family:var(--sans),var(--sans-zh);font-weight:200;font-size:min(5.2vw,9.2vh);line-height:1.1;letter-spacing:-.025em">接下来做四件事</h2>
-      </div>
-    </div>
-    <div data-anim="up" style="display:grid;grid-template-columns:repeat(4,1fr);gap:2vw;margin-top:7vh;flex:1;align-content:start">
-      <div style="display:flex;flex-direction:column;gap:1.6vh;border-top:1px solid rgba(255,255,255,.25);padding-top:2vh">
-        <div class="t-meta" style="color:rgba(255,255,255,.55)">— 01 / INFRA</div>
-        <div style="font-family:var(--sans),var(--sans-zh);font-weight:300;font-size:max(20px,1.7vw);line-height:1.25">接入 AgentCore Runtime</div>
-        <p style="font-size:max(16px,.95vw);line-height:1.6;color:rgba(255,255,255,.72);font-weight:400">与 AgentCore Runtime 等 Infra 工具模块结合,把两个平台跑在标准化的 agent 运行时上。</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:1.6vh;border-top:1px solid rgba(255,255,255,.25);padding-top:2vh">
-        <div class="t-meta" style="color:rgba(255,255,255,.55)">— 02 / OPEN</div>
-        <div style="font-family:var(--sans),var(--sans-zh);font-weight:300;font-size:max(20px,1.7vw);line-height:1.25">开放给大家使用</div>
-        <p style="font-size:max(16px,.95vw);line-height:1.6;color:rgba(255,255,255,.72);font-weight:400">打包成团队人人可用的自助工具,带上客户数据就能跑评测、出对比报告。</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:1.6vh;border-top:1px solid rgba(255,255,255,.25);padding-top:2vh">
-        <div class="t-meta" style="color:rgba(255,255,255,.55)">— 03 / DEMO</div>
-        <div style="font-family:var(--sans),var(--sans-zh);font-weight:300;font-size:max(20px,1.7vw);line-height:1.25">客户现场演示</div>
-        <p style="font-size:max(16px,.95vw);line-height:1.6;color:rgba(255,255,255,.72);font-weight:400">engage 广告客户时有东西可以当场演示,不再停留在 PPT 和口头承诺。</p>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:1.6vh;border-top:2px solid var(--accent-bright);padding-top:2vh">
-        <div class="t-meta" style="color:var(--accent-bright)">— 04 / TRUST</div>
-        <div style="font-family:var(--sans),var(--sans-zh);font-weight:300;font-size:max(20px,1.7vw);line-height:1.25;color:var(--accent-bright)">降低沟通成本</div>
-        <p style="font-size:max(16px,.95vw);line-height:1.6;color:rgba(255,255,255,.72);font-weight:400">用可复现的数字证明 Bedrock 模型的能力,把「信不信」的争论变成「看结果」。</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ============ 10 · Closing · IKB 半屏 ============ -->
-<section class="slide split" data-animate="split-statement" data-layout="SWISS-CLOSING-ASCII">
-  <div class="canvas-card">
-    <div class="split-half">
-      <div class="half b-accent" style="padding:5.6vh 3.6vw 4.4vh;justify-content:space-between;position:relative;overflow:hidden">
-        <canvas class="ascii-bg" aria-hidden="true"></canvas>
-        <div class="chrome-min" style="margin-bottom:0;position:relative;z-index:1">
-          <div class="l">10 / 10</div>
-          <div class="r">CLOSING</div>
-        </div>
-        <div data-anim="manifesto" style="display:flex;flex-direction:column;gap:2vh;position:relative;z-index:1">
-          <div class="t-meta" style="color:rgba(255,255,255,.78);letter-spacing:.22em;margin-bottom:1.6vh">MANIFESTO</div>
-          <h2 style="font-family:var(--sans),var(--sans-zh);font-size:min(7.4vw,13vh);line-height:1;letter-spacing:-.025em;font-weight:200;color:#fff">Show,<br/>don't <span style="font-style:italic;font-weight:300">tell</span>.</h2>
-          <div style="font-family:var(--sans),var(--sans-zh);font-size:max(15px,1vw);line-height:1.6;color:rgba(255,255,255,.82);font-weight:300;max-width:36ch;margin-top:1.4vh">与其向客户解释大模型能不能做投放,不如当场跑给他看。</div>
-        </div>
-        <div data-anim="signature" style="display:flex;justify-content:space-between;align-items:end;border-top:1px solid rgba(255,255,255,.22);padding-top:2vh;position:relative;z-index:1">
-          <div class="t-meta" style="color:rgba(255,255,255,.62)">Agentic Advertising &amp; Bidding</div>
-          <div class="t-meta" style="color:rgba(255,255,255,.62)">26.08.03</div>
-        </div>
-      </div>
-      <div class="half" style="padding:5.6vh 3.6vw 4.4vh;justify-content:space-between">
-        <div class="chrome-min"><div class="l">TAKEAWAYS</div><div class="r">03 POINTS</div></div>
-        <div data-anim="rules" style="display:flex;flex-direction:column;gap:0">
-          <div style="display:grid;grid-template-columns:auto 1fr;gap:2vw;align-items:start;padding:2.6vh 0;border-top:1px solid var(--border-subtle)">
-            <div style="font-family:var(--sans);font-weight:200;font-size:min(4.4vw,7.8vh);line-height:.9;color:var(--text-primary)">01</div>
-            <div>
-              <h3 style="font-family:var(--sans),var(--sans-zh);font-weight:400;font-size:max(18px,1.8vw);line-height:1.2;letter-spacing:-.015em;color:var(--text-primary);margin-bottom:1vh">两个平台已经上线</h3>
-              <p style="font-family:var(--sans),var(--sans-zh);font-size:max(16px,.94vw);line-height:1.6;color:var(--text-secondary);font-weight:400">预算分配 + Auto Bidding,都已集成到 AIFL 内部网站,拿客户数据即可评测。</p>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:auto 1fr;gap:2vw;align-items:start;padding:2.6vh 0;border-top:1px solid var(--border-subtle)">
-            <div style="font-family:var(--sans);font-weight:200;font-size:min(4.4vw,7.8vh);line-height:.9;color:var(--text-primary)">02</div>
-            <div>
-              <h3 style="font-family:var(--sans),var(--sans-zh);font-weight:400;font-size:max(18px,1.8vw);line-height:1.2;letter-spacing:-.015em;color:var(--text-primary);margin-bottom:1vh">大模型 prompt-only 已排第 2</h3>
-              <p style="font-family:var(--sans),var(--sans-zh);font-size:max(16px,.94vw);line-height:1.6;color:var(--text-secondary);font-weight:400">低于强化学习最佳基线,强于 PID 和自训 DT;一次 prompt 迭代还有明显空间。</p>
-            </div>
-          </div>
-          <div style="display:grid;grid-template-columns:auto 1fr;gap:2vw;align-items:start;padding:2.6vh 0;border-top:1px solid var(--border-subtle);border-bottom:2px solid var(--accent)">
-            <div style="font-family:var(--sans);font-weight:200;font-size:min(4.4vw,7.8vh);line-height:.9;color:var(--accent)">03</div>
-            <div>
-              <h3 style="font-family:var(--sans),var(--sans-zh);font-weight:400;font-size:max(18px,1.8vw);line-height:1.2;letter-spacing:-.015em;color:var(--accent);margin-bottom:1vh">下一步:接 AgentCore,开放使用</h3>
-              <p style="font-family:var(--sans),var(--sans-zh);font-size:max(16px,.94vw);line-height:1.6;color:var(--text-secondary);font-weight:400">让每次客户 engagement 都有现场 demo,用结果降低沟通成本。</p>
-            </div>
-          </div>
-        </div>
-        <div data-anim="foot" class="t-meta" style="color:var(--text-helper);text-align:right">→ 完 · END OF FIELD NOTE</div>
       </div>
     </div>
   </div>
