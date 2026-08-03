@@ -62,6 +62,13 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
   const [models, setModels] = useState<ModelInfo[]>([])
   const [defaultPrompt, setDefaultPrompt] = useState('')
   const [templates, setTemplates] = useState<PromptTemplate[]>([])
+  const [publicDemo, setPublicDemo] = useState<{
+    enabled: boolean
+    models: string[]
+    max_pv: number
+    max_episodes: number
+    remaining_today: number
+  } | null>(null)
   const [savedPrompts, setSavedPrompts] = useState(loadSaved)
   const [apiOk, setApiOk] = useState<boolean | null>(null)
 
@@ -88,6 +95,7 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
         setDefaultPrompt(d.default_system_prompt)
         setPrompt(d.default_system_prompt)
         setTemplates(d.prompt_templates ?? [])
+        setPublicDemo(d.public_demo?.enabled ? d.public_demo : null)
         setApiOk(true)
       })
       .catch(() => setApiOk(false))
@@ -172,12 +180,12 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
 
       <div style={{ display: 'grid', gap: 10, gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
         <label style={{ fontSize: 12, color: 'var(--text-secondary)' }}>
-          Bedrock API Key（us-west-2）
+          Bedrock API Key（us-west-2）{publicDemo && '· 可留空'}
           <input
             type="password"
             value={bedrockKey}
             onChange={(e) => setBedrockKey(e.target.value)}
-            placeholder="bedrock-api-key…"
+            placeholder={publicDemo ? '留空 = 免费演示额度' : 'bedrock-api-key…'}
             style={{ width: '100%', marginTop: 4, padding: '6px 8px', border: '1px solid var(--grid)', borderRadius: 6 }}
           />
         </label>
@@ -298,12 +306,18 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
       <div style={{ marginTop: 12, display: 'flex', gap: 12, alignItems: 'center' }}>
         <button
           className="tab-btn active"
-          disabled={!bedrockKey.trim() || taskId != null}
+          disabled={(!bedrockKey.trim() && !publicDemo) || taskId != null}
           onClick={start}
-          style={{ opacity: !bedrockKey.trim() || taskId != null ? 0.5 : 1 }}
+          style={{ opacity: (!bedrockKey.trim() && !publicDemo) || taskId != null ? 0.5 : 1 }}
         >
-          {taskId ? '运行中…' : '启动实验'}
+          {taskId ? '运行中…' : bedrockKey.trim() ? '启动实验' : publicDemo ? '免费启动实验' : '启动实验'}
         </button>
+        {publicDemo && !bedrockKey.trim() && !taskId && (
+          <span style={{ fontSize: 11, color: 'var(--good)' }}>
+            演示模式：限 {publicDemo.models.join(' / ')} · PV ≤ {publicDemo.max_pv.toLocaleString()} ·{' '}
+            {publicDemo.max_episodes} episode · 今日剩余 {publicDemo.remaining_today} 次
+          </span>
+        )}
         {taskId && (
           <>
             <div style={{ flex: 1, maxWidth: 320, height: 8, background: 'var(--grid)', borderRadius: 4 }}>

@@ -42,6 +42,19 @@ MAX_PV = 500000          # full paper-scale market allowed (sim ~6 min/episode)
 MAX_EPISODES = 2
 MAX_PROMPT_CHARS = 4000
 MAX_CONCURRENT_TASKS = 4
+
+# ---- public-demo mode (PUBLIC_DEMO=1) --------------------------------------
+# Experiments run on THIS instance's IAM role (owner pays) instead of a
+# user-supplied key. Guard rails, all enforced server-side:
+import os as _os
+
+PUBLIC_DEMO = _os.environ.get("PUBLIC_DEMO") == "1"
+PUBLIC_MODELS = {"claude-haiku-4-5", "nova-2-lite"}   # cheap tiers only
+PUBLIC_MAX_PV = 100000
+PUBLIC_MAX_EPISODES = 1
+PUBLIC_DAILY_EXPERIMENTS = 30                          # per UTC day, global
+PUBLIC_CONCURRENT = 2
+_PUBLIC_DAY: dict = {"day": "", "count": 0}
 MAX_TASKS_KEPT = 200     # bound the in-memory table; oldest finished evicted
 _TASKS: dict[str, dict] = {}
 _TASKS_LOCK = threading.Lock()
@@ -91,6 +104,14 @@ def list_models():
         ],
         "limits": {"max_pv": MAX_PV, "max_episodes": MAX_EPISODES,
                    "max_prompt_chars": MAX_PROMPT_CHARS},
+        "public_demo": {
+            "enabled": PUBLIC_DEMO,
+            "models": sorted(PUBLIC_MODELS),
+            "max_pv": PUBLIC_MAX_PV,
+            "max_episodes": PUBLIC_MAX_EPISODES,
+            "remaining_today": (max(0, PUBLIC_DAILY_EXPERIMENTS - _PUBLIC_DAY["count"])
+                                 if PUBLIC_DEMO else 0),
+        },
     }
 
 
@@ -102,15 +123,33 @@ def create_experiment(
     x_aifl_alias: Optional[str] = Header(None),
 ):
     key = (x_bedrock_key or "").strip()
-    if not key:
-        raise HTTPException(400, "缺少 X-Bedrock-Key（在页面设置区粘贴你的 Bedrock API key）")
     if req.model not in SELF_SERVE_MODELS:
         raise HTTPException(400, f"未知模型 {req.model}")
+    if PUBLIC_DEMO and not key:
+        # demo courtesy runs on the owner's account: cheap models, small
+        # markets, one episode, global daily cap
+        if req.model not in PUBLIC_MODELS:
+            raise HTTPException(400,
+                f"公开演示模式仅开放 {sorted(PUBLIC_MODELS)}；其他模型请粘贴自己的 Bedrock key")
+        if req.pv_num > PUBLIC_MAX_PV or req.episodes > PUBLIC_MAX_EPISODES:
+            raise HTTPException(400,
+                f"公开演示模式限 PV ≤ {PUBLIC_MAX_PV:,}、episodes ≤ {PUBLIC_MAX_EPISODES}；更大规模请用自己的 key")
+        import datetime as _dt
+        today = _dt.datetime.utcnow().strftime("%Y-%m-%d")
+        with _TASKS_LOCK:
+            if _PUBLIC_DAY["day"] != today:
+                _PUBLIC_DAY.update(day=today, count=0)
+            if _PUBLIC_DAY["count"] >= PUBLIC_DAILY_EXPERIMENTS:
+                raise HTTPException(429, "今日免费演示额度已用完，请明天再来或粘贴自己的 Bedrock key")
+            _PUBLIC_DAY["count"] += 1
+    elif not key:
+        raise HTTPException(400, "缺少 X-Bedrock-Key（在页面设置区粘贴你的 Bedrock API key）")
     uid = _resolve_uid(x_aifl_alias, x_user_id)
+    max_conc = PUBLIC_CONCURRENT if (PUBLIC_DEMO and not key) else MAX_CONCURRENT_TASKS
     with _TASKS_LOCK:
         _evict_old_tasks_locked()
         running = sum(1 for t in _TASKS.values() if t["status"] == "running")
-        if running >= MAX_CONCURRENT_TASKS:
+        if running >= max_conc:
             raise HTTPException(429, "当前实验队列已满，请稍后再试")
         task_id = uuid.uuid4().hex[:12]
         _TASKS[task_id] = {
@@ -138,11 +177,15 @@ def _run_experiment(task_id: str, req: ExperimentRequest, key: str) -> None:
     total_calls = 48 * req.episodes
     try:
         model_id = SELF_SERVE_MODELS[req.model][0]
-        client = BearerTokenClient(model_id=model_id, api_key=key)
+        if key:
+            client = BearerTokenClient(model_id=model_id, api_key=key)
+        else:  # PUBLIC_DEMO courtesy path: instance IAM role, owner pays
+            from adsim.agents.llm_clients import BedrockClient
+            client = BedrockClient(model_id=model_id)
 
         # preflight: fail fast on bad key / missing model access, instead of
         # silently running the whole experiment on fallback
-        t["detail"] = "校验 key 与模型权限"
+        t["detail"] = "校验模型权限"
         client("Reply with the word OK.")
 
         # progress hook: plain closure (assigning __call__ on the instance
