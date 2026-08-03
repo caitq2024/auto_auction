@@ -349,7 +349,9 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
             结果：{result.model} · score {result.score_mean.toFixed(2)}
             {result.custom_prompt && '（自定义 prompt）'}
             <span style={{ fontWeight: 400, fontSize: 12, color: 'var(--good)', marginLeft: 10 }}>
-              ✓ 已加入下方排行榜与 Episode 回放
+              ✓ 已加入下方排行榜与 Episode 回放（
+              {result.pv_num >= 200000 ? '500k PV 全规模' : '50k PV 快速实验'}场景——榜单已自动切换，
+              两个场景的分数不可互比，可用顶部按钮切回）
             </span>
           </h3>
           <table className="data" style={{ fontSize: 12 }}>
