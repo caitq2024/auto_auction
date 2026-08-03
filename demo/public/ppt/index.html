@@ -1321,7 +1321,7 @@
       <div class="r">04 / 05</div>
     </div>
     <div data-anim="line" style="display:flex;flex-direction:column;gap:1.4vh">
-      <div class="t-meta">平台一 · 已集成 AIFL 内部网站</div>
+      <div class="t-meta">平台一 · 已集成 AIFL 内部网站 · <a href="https://aifl.aws.dev/tools/ad-budget" target="_blank" style="color:var(--accent);text-decoration:underline;text-underline-offset:3px;letter-spacing:.06em">aifl.aws.dev/tools/ad-budget ↗</a></div>
       <h2 style="font-family:var(--sans),var(--sans-zh);font-weight:200;font-size:min(5.2vw,9.2vh);line-height:1.05;letter-spacing:-.025em">预算分配测试平台</h2>
     </div>
     <div class="stack-row" style="margin-top:5vh">
@@ -1364,33 +1364,33 @@
     <div class="sub-grid-3-2" data-anim="up">
       <div class="sub-card">
         <span class="nb-corner">01</span>
-        <i data-lucide="clock" class="lucide"></i>
-        <div class="ttl">48 个时段</div>
-        <div class="desc">一天按半小时切成 48 个 tick,预算要花完一整天,不能上午就烧光</div>
+        <i data-lucide="refresh-cw" class="lucide"></i>
+        <div class="ttl">原理:市场回放模拟</div>
+        <div class="desc">完整重建一个竞价市场:每次展示机会真实拍卖、真实扣费。换策略不换流量与随机数,新旧策略在同一个市场里公平对比</div>
       </div>
       <div class="sub-card">
         <span class="nb-corner">02</span>
-        <i data-lucide="users" class="lucide"></i>
-        <div class="ttl">48 个广告主</div>
-        <div class="desc">我们控制其中 1 个 agent,其余 47 个对手保持不变,同台竞价</div>
+        <i data-lucide="database" class="lucide"></i>
+        <div class="ttl">数据来源:AuctionNet</div>
+        <div class="desc">阿里妈妈开源的真实广告竞价数据集(NeurIPS 2024),流量价值分布、对手行为都来自真实市场日志</div>
       </div>
       <div class="sub-card">
         <span class="nb-corner">03</span>
-        <i data-lucide="gavel" class="lucide"></i>
-        <div class="ttl">3 坑位 GSP</div>
-        <div class="desc">每次展示机会出价最高的三名获得坑位,按下一名的出价扣费</div>
+        <i data-lucide="users" class="lucide"></i>
+        <div class="ttl">48 时段 × 48 广告主</div>
+        <div class="desc">一天按半小时切成 48 个时段;48 个广告主同台,我们控制其中 1 个 agent,其余 47 个对手保持不变</div>
       </div>
       <div class="sub-card">
         <span class="nb-corner">04</span>
-        <i data-lucide="activity" class="lucide"></i>
-        <div class="ttl">500k PV / 局</div>
-        <div class="desc">每局最多 50 万次展示机会,换策略不换流量与随机数,对比公平</div>
+        <i data-lucide="gavel" class="lucide"></i>
+        <div class="ttl">3 坑位 GSP</div>
+        <div class="desc">每次展示机会出价最高的三名获得坑位,按下一名的出价扣费;预算要撑满一整天,不能上午就烧光</div>
       </div>
       <div class="sub-card">
         <span class="nb-corner">05</span>
         <i data-lucide="layers" class="lucide"></i>
-        <div class="ttl">策略库同台</div>
-        <div class="desc">PID / 强化学习 IQL·BC / Decision Transformer / LLM,统一竞赛口径评分</div>
+        <div class="ttl">策略库同台对比</div>
+        <div class="desc">PID / 强化学习 IQL·BC / Decision Transformer / LLM 统一口径评分;可观察不同策略随时段的出价与预算分配变化</div>
       </div>
       <div class="sub-card accent">
         <span class="nb-corner">06</span>
@@ -1399,8 +1399,7 @@
         <div class="desc">大模型加 prompt 直接当竞价 agent,支持自带 API key 自助评测</div>
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
 </div>
 
