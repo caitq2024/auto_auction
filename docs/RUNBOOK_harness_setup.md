@@ -228,9 +228,43 @@ nova-2-lite 2.08。
   （权限传播），等 1-2 分钟重试即好；
 - 排查触发问题看 filter_log_events（describe_log_streams 取"最新流"可能拿到旧流）。
 
-## 第 5 步（H4）：Observability / AgentCore evals 接入
+## 第 5 步（H4）：Observability + 竞技场提交入口（2026-08-04 完成）
 
-（待做）
+**决策 trace → CloudWatch**（src/adsim/storage/trace_export.py）：
+- 每个 LLM/remote/agentcore 任务跑完，把逐决策记录以 **EMF**（Embedded Metric
+  Format）写入 log group `/adsim/decisions`（stream 为 matrix/task/ep）；
+- EMF 自动生成指标：namespace `adsim` 下 decision_latency_sec / fallback /
+  applied_alpha（维度 matrix_id × model_id）——CloudWatch 里直接出图，可设告警
+  （如 fallback 突增）；
+- trace_id/span_id（H0 字段）把三处记录连起来：S3 JSONL（训练/复盘的事实源）↔
+  CloudWatch EMF（运维观测）↔ AgentCore Runtime 自身日志。
+
+**竞技场提交入口**（harness/aggregator/submit_agent_lambda.py → Lambda
+`adsim-submit-agent` + Function URL，AWS_IAM 鉴权）：
+- POST {"name", "runtime_arn"|"endpoint_url"} → 校验（ARN 格式/HTTPS）→ 每名字
+  每小时限一次（S3 marker）→ 固定服务端场景（official period-7/8 × 500k × 2ep，
+  arena_v1 矩阵）→ 起 adsim-matrix 执行 → 结果经聚合器自动进
+  leaderboards/arena_v1.json；
+- experiment_spec 新增 `agentcore` 策略（runtime_arn → AgentCoreAgent 传输层）。
+- 首个参赛者：我们的 H1 haiku runtime，score 15.85（官方流量口径）。
+
+坑：
+- remote/agentcore 策略也要走 placeholder controlled slot（首跑 KeyError）；
+- Fargate task role 能 put 日志但 log group 需预先存在（create_log_group 的
+  异常被吞导致静默跳过）——用 claw 预建 `/adsim/decisions` 一次即可；
+- claw 无 logs:DescribeLogStreams（读日志用 filter_log_events 或控制台）。
+
+## 云上资产（H4 后完整清单）
+
+| 资产 | 值 |
+|---|---|
+| S3 bucket | adsim-experiments-651433607849（matrix/ data/ leaderboards/ arena/） |
+| AgentCore Runtime | adsim_bidding_agent-keyeetGBSF |
+| ECR | adsim-simulator |
+| ECS | 集群 adsim-harness · 任务定义 adsim-simulator |
+| Step Functions | adsim-matrix |
+| Lambda | adsim-aggregator（S3 触发）· adsim-submit-agent（Function URL） |
+| CloudWatch | /adsim/decisions（EMF）· namespace adsim 三个指标 |
 
 ## 附录 A：当前云上资产清单
 
@@ -238,8 +272,8 @@ nova-2-lite 2.08。
 |---|---|
 | S3 bucket | adsim-experiments-651433607849 (us-west-2) |
 | AgentCore Runtime | adsim_bidding_agent-keyeetGBSF（haiku4.5+v2，READY） |
-| ECR | （H2 建） |
-| ECS/StepFunctions/Lambda | （H2/H3 建） |
+| ECR | adsim-simulator |
+| ECS/StepFunctions/Lambda | 见 H4 后完整清单 |
 
 ## 附录 B：教师扩样确认参数（2026-08-04）
 
