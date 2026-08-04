@@ -28,9 +28,10 @@ _NO_TEMPERATURE_MARKERS = ("opus-4-8", "opus-5", "sonnet-5", "fable-5")
 # Reasoning models emit a reasoningContent block BEFORE the text block; a
 # 300-token budget truncates mid-reasoning and no text is ever produced,
 # silently driving every call to fallback. Give them room.
-# opus-5 also emits reasoningContent under complex prompts (observed 2026-08-04)
-_REASONING_MARKERS = ("fable-5", "deepseek", "r1-v1", "opus-5")
-_REASONING_MIN_TOKENS = 2500
+# Models observed emitting reasoningContent under the v2 bidding prompt
+# (probe with the REAL prompt — simple probes miss this)
+_REASONING_MARKERS = ("fable-5", "deepseek", "r1-v1", "opus-5", "sonnet-5")
+_REASONING_MIN_TOKENS = 4000
 
 
 _DEFAULT_MIN_TOKENS = 1500  # models often write prose before the JSON; a
