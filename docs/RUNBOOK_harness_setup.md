@@ -36,23 +36,43 @@ inline policy `adsim-passrole`（允许把 adsim-* 执行角色传给服务）�
 }
 ```
 
-手动建两个执行角色（claw 没有 iam:CreateRole，控制台操作）：
+手动建两个执行角色（claw 没有 iam:CreateRole/UpdateAssumeRolePolicy，必须控制台操作）：
 
-- `adsim-task-role`：信任 ecs-tasks.amazonaws.com；附 AmazonS3FullAccess +
-  AmazonBedrockFullAccess + BedrockAgentCoreFullAccess + AmazonECSTaskExecutionRolePolicy
-- `adsim-lambda-role`：信任 lambda.amazonaws.com；附 AmazonS3FullAccess +
-  AWSLambdaBasicExecutionRole + AWSStepFunctionsFullAccess
+**建角色路径（重要——第一步就要选对）**：IAM → Roles → Create role →
+Trusted entity type 选 **AWS service** → Use case 下拉里：
 
-验证：
+- `adsim-task-role`：选 **Elastic Container Service → ECS Task**（⚠️ 不是默认的
+  EC2！选错 ECS 起任务时报 unable to assume role）。附加策略：
+  AmazonECSTaskExecutionRolePolicy + AmazonS3FullAccess + AmazonBedrockFullAccess +
+  BedrockAgentCoreFullAccess
+- `adsim-lambda-role`：选 **Lambda**。附加策略：AWSLambdaBasicExecutionRole +
+  AWSStepFunctionsFullAccess + AmazonS3FullAccess
+
+如果建时选错了 use case（例如默认 EC2），事后修复：角色页 → Trust relationships →
+Edit trust policy，Principal.Service 改成 `ecs-tasks.amazonaws.com`（task role）/
+`lambda.amazonaws.com`（lambda role）。首次搭建时我们就踩了这个坑。
+
+验证（在 claw 机器上跑）：
 
 ```bash
 aws ecr get-authorization-token --region us-west-2 --query 'authorizationData[0].expiresAt'
 aws bedrock-agentcore-control list-agent-runtimes --region us-west-2 --max-results 1
+python3 -c "
+import boto3
+iam = boto3.client('iam')
+for r in ('adsim-task-role', 'adsim-lambda-role'):
+    d = iam.get_role(RoleName=r)['Role']
+    print(r, d['AssumeRolePolicyDocument']['Statement'][0]['Principal'])"
+# 期望输出 Service 分别为 ecs-tasks.amazonaws.com / lambda.amazonaws.com
 ```
 
 坑：
 - `ecr:GetAuthorizationToken` 必须 Resource:*（AWS 规定）；
-- PowerUser 版 ECR 策略缺 CreateRepository，agentcore 首次部署会失败——用 FullAccess。
+- PowerUser 版 ECR 策略缺 CreateRepository，agentcore 首次部署会失败——用 FullAccess；
+- 建角色 use case 选错成 EC2 → trust policy 是 ec2.amazonaws.com，ECS/Lambda 无法
+  assume，必须手动改 trust policy（见上）；
+- claw 自身对 IAM 只有读权限（get/list），所有角色创建/修改都在控制台由账号 owner 做
+  ——这是有意的权限收敛，claw 只能 PassRole 那些 adsim-* 前缀的角色。
 
 ## 第 1 步（H0）：与 infra 无关的三个接口（纯代码，本仓库已含）
 
