@@ -87,4 +87,5 @@ export interface DemoData {
   sample_rows: SampleRow[]
   comparisons: Comparison[]
   llm_runs: LLMRun[]
+  harness_leaderboards?: import('../components/TeacherMatrix').HarnessBoard[]
 }

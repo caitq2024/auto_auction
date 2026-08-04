@@ -5,6 +5,7 @@ import { Leaderboard } from './components/Leaderboard'
 import { LLMTrace } from './components/LLMTrace'
 import { Replay } from './components/Replay'
 import { RunExperiment, type ExperimentResult } from './components/RunExperiment'
+import { TeacherMatrix } from './components/TeacherMatrix'
 import type { Candidate, DemoData } from './lib/types'
 
 // categorical slots 1-3 (validated); LLM strategies get slot-4 yellow with
@@ -114,6 +115,7 @@ export default function App() {
       <div style={{ display: 'grid', gap: 20 }}>
         <Explainer samples={data.sample_rows ?? []} />
         <Leaderboard comp={comp} colorOf={colorOf} />
+        <TeacherMatrix boards={data.harness_leaderboards ?? []} />
         <RunExperiment onResult={onExperimentResult} />
         <Replay comp={comp} colorOf={colorOf} />
         <LLMTrace runs={data.llm_runs} />

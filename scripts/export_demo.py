@@ -262,6 +262,25 @@ def export_sample_rows() -> list[dict]:
     return cases
 
 
+def export_harness_leaderboards() -> list[dict]:
+    """Pull harness matrix leaderboards from S3 (H3 aggregator output)."""
+    import boto3
+
+    out = []
+    try:
+        s3 = boto3.client("s3", region_name="us-west-2")
+        bucket = "adsim-experiments-651433607849"
+        idx = json.loads(s3.get_object(Bucket=bucket,
+                                       Key="leaderboards/index.json")["Body"].read())
+        for mid in idx.get("matrices", []):
+            board = json.loads(s3.get_object(
+                Bucket=bucket, Key=f"leaderboards/{mid}.json")["Body"].read())
+            out.append(board)
+    except Exception as e:
+        print(f"harness leaderboards skipped: {type(e).__name__}: {e}")
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default=str(ROOT / "demo/public/demo_data.json"))
@@ -269,6 +288,7 @@ def main():
 
     data = {
         "generated_from": "auction-sim-platform experiments (simulated results only)",
+        "harness_leaderboards": export_harness_leaderboards(),
         "sample_rows": export_sample_rows(),
         "comparisons": [export_comparison(k, c) for k, c in COMPARISONS.items()
                         if (ROOT / c["dir"]).exists()],
