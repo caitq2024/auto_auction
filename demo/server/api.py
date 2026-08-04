@@ -13,6 +13,8 @@ Run: uvicorn api:app --host 0.0.0.0 --port 8687   (from demo/server/)
 """
 from __future__ import annotations
 
+import json
+
 import sys
 import threading
 import time
@@ -88,6 +90,64 @@ class ExperimentRequest(BaseModel):
     system_prompt: Optional[str] = Field(
         default=None, max_length=MAX_PROMPT_CHARS,
         description="custom instruction prompt; None = platform default")
+
+
+@app.get("/api/harness/leaderboards")
+def harness_leaderboards():
+    """Live harness boards straight from S3 (index + each matrix)."""
+    import boto3
+
+    s3 = boto3.client("s3", region_name="us-west-2")
+    bucket = "adsim-experiments-651433607849"
+    try:
+        idx = json.loads(s3.get_object(Bucket=bucket,
+                                       Key="leaderboards/index.json")["Body"].read())
+    except Exception:
+        return {"boards": []}
+    boards = []
+    for mid in idx.get("matrices", []):
+        try:
+            boards.append(json.loads(s3.get_object(
+                Bucket=bucket, Key=f"leaderboards/{mid}.json")["Body"].read()))
+        except Exception:
+            continue
+    return {"boards": boards}
+
+
+class ArenaSubmission(BaseModel):
+    name: str = Field(max_length=32)
+    runtime_arn: Optional[str] = None
+    endpoint_url: Optional[str] = None
+
+
+@app.post("/api/harness/submit")
+def harness_submit(sub: ArenaSubmission):
+    """Proxy to the adsim-submit-agent Lambda (keeps IAM on the server)."""
+    import boto3
+
+    lam = boto3.client("lambda", region_name="us-west-2")
+    payload = {"body": json.dumps(sub.model_dump(exclude_none=True))}
+    r = lam.invoke(FunctionName="adsim-submit-agent",
+                   Payload=json.dumps(payload).encode())
+    resp = json.loads(r["Payload"].read())
+    body = json.loads(resp.get("body", "{}"))
+    if resp.get("statusCode", 500) >= 400:
+        raise HTTPException(resp["statusCode"], body.get("error", "submit failed"))
+    return body
+
+
+@app.get("/api/harness/executions")
+def harness_executions():
+    """Recent adsim-matrix executions for the status panel."""
+    import boto3
+
+    sfn = boto3.client("stepfunctions", region_name="us-west-2")
+    ex = sfn.list_executions(
+        stateMachineArn="arn:aws:states:us-west-2:651433607849:stateMachine:adsim-matrix",
+        maxResults=10)["executions"]
+    return {"executions": [
+        {"name": e["name"], "status": e["status"],
+         "startDate": e["startDate"].isoformat()} for e in ex]}
 
 
 @app.get("/api/models")
