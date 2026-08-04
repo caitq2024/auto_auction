@@ -24,11 +24,30 @@ import boto3  # noqa: E402
 from adsim.core.experiment_spec import MatrixTask, run_task  # noqa: E402
 
 
+def _fetch_replay_data(base: dict, bucket: str) -> None:
+    """Replay traffic: download the period CSVs this task needs from
+    s3://<bucket>/data/official/ to the same relative local paths the
+    scenario references. ~1-2 min per 3.8GB period inside the region."""
+    csvs = base.get("replay_period_csvs") or []
+    if not csvs:
+        return
+    s3 = boto3.client("s3")
+    for rel in csvs:
+        local = Path(rel)
+        if local.exists():
+            continue
+        local.parent.mkdir(parents=True, exist_ok=True)
+        key = rel if not rel.startswith("data/") else rel  # keys mirror repo layout
+        print(f"[run_task] fetching s3://{bucket}/{key}", flush=True)
+        s3.download_file(bucket, key, str(local))
+
+
 def main() -> None:
     task_raw = os.environ["TASK_JSON"]
     bucket = os.environ.get(
         "RESULTS_BUCKET", "adsim-experiments-651433607849")
     t = json.loads(task_raw)
+    _fetch_replay_data(t.get("base", {}), bucket)
     task = MatrixTask(
         matrix_id=t["matrix_id"], task_id=t["task_id"],
         candidate=t["candidate"], base=t.get("base", {}),
