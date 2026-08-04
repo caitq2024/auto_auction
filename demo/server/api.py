@@ -150,6 +150,50 @@ def harness_executions():
          "startDate": e["startDate"].isoformat()} for e in ex]}
 
 
+@app.get("/api/harness/trace/{matrix_id}/{task_id}")
+def harness_trace(matrix_id: str, task_id: str):
+    """Full decision trajectory for one matrix task, straight from S3."""
+    import re as _re
+
+    import boto3
+
+    if not _re.fullmatch(r"[\w-]+", matrix_id) or not _re.fullmatch(r"[\w-]+", task_id):
+        raise HTTPException(400, "bad id")
+    s3 = boto3.client("s3", region_name="us-west-2")
+    bucket = "adsim-experiments-651433607849"
+    key = f"matrix/{matrix_id}/{task_id}/trajectory_all.jsonl"
+    try:
+        raw = s3.get_object(Bucket=bucket, Key=key)["Body"].read().decode()
+    except Exception:
+        raise HTTPException(404, "trajectory not found (non-LLM task or not finished)")
+    calls = []
+    for line in raw.splitlines():
+        c = json.loads(line)
+        calls.append({
+            "tick": c["tick"],
+            "applied_alpha": c["applied_alpha"],
+            "parsed_alpha": c["parsed_alpha"],
+            "latency_sec": c["latency_sec"],
+            "fallback": c["fallback"],
+            "error": (c.get("error") or None) and c["error"][:200],
+            "raw_output": (c.get("raw_output") or "")[:1200],
+            "observation": _extract_obs_from_prompt(c.get("prompt") or ""),
+            "trace_id": c.get("trace_id"),
+        })
+    return {"matrix_id": matrix_id, "task_id": task_id, "calls": calls}
+
+
+def _extract_obs_from_prompt(prompt: str):
+    marker = "Current state:\n"
+    i = prompt.rfind(marker)
+    if i < 0:
+        return None
+    try:
+        return json.loads(prompt[i + len(marker):])
+    except Exception:
+        return None
+
+
 @app.get("/api/models")
 def list_models():
     return {

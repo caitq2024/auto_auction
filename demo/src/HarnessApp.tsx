@@ -10,6 +10,18 @@ interface Execution {
   startDate: string
 }
 
+interface TraceCall {
+  tick: number
+  applied_alpha: number
+  parsed_alpha: number | null
+  latency_sec: number
+  fallback: string | null
+  error: string | null
+  raw_output: string
+  observation: Record<string, Record<string, unknown>> | null
+  trace_id: string | null
+}
+
 const STATUS_COLOR: Record<string, string> = {
   RUNNING: 'var(--series-1)',
   SUCCEEDED: 'var(--good)',
@@ -21,6 +33,12 @@ export default function HarnessApp() {
   const [boards, setBoards] = useState<HarnessBoard[]>([])
   const [executions, setExecutions] = useState<Execution[]>([])
   const [apiOk, setApiOk] = useState<boolean | null>(null)
+
+  // trace browser state
+  const [traceTask, setTraceTask] = useState<{ matrix: string; task: string } | null>(null)
+  const [trace, setTrace] = useState<{ calls: TraceCall[] } | null>(null)
+  const [traceTick, setTraceTick] = useState(0)
+  const [traceErr, setTraceErr] = useState<string | null>(null)
 
   // submit form state
   const [name, setName] = useState('')
@@ -68,6 +86,17 @@ export default function HarnessApp() {
     } finally {
       setSubmitting(false)
     }
+  }
+
+  const loadTrace = (matrix: string, task: string) => {
+    setTraceTask({ matrix, task })
+    setTrace(null)
+    setTraceErr(null)
+    setTraceTick(0)
+    fetch(`${API}/harness/trace/${matrix}/${task}`)
+      .then((r) => (r.ok ? r.json() : r.json().then((d) => Promise.reject(new Error(d.detail ?? r.status)))))
+      .then(setTrace)
+      .catch((e) => setTraceErr(String(e instanceof Error ? e.message : e)))
   }
 
   const arenaBoards = boards.filter((b) => b.matrix_id.startsWith('arena'))
@@ -197,7 +226,75 @@ export default function HarnessApp() {
         </div>
 
         {/* teacher matrices (live from S3) */}
-        <TeacherMatrix boards={matrixBoards} />
+        <TeacherMatrix boards={matrixBoards} onPick={loadTrace} />
+
+        {/* decision trace browser */}
+        <div className="card">
+          <h2 style={{ margin: '0 0 4px', fontSize: 16 }}>决策 Trace 浏览器</h2>
+          <p style={{ margin: '0 0 10px', color: 'var(--text-muted)', fontSize: 12 }}>
+            点击上方任意榜单行加载该任务的完整决策轨迹（S3 原始记录；CloudWatch 里有同源的
+            EMF 指标，namespace <span className="mono">adsim</span>，日志组{' '}
+            <span className="mono">/adsim/decisions</span>）。
+          </p>
+          {!traceTask && <div style={{ color: 'var(--text-muted)', fontSize: 13 }}>（未选择任务）</div>}
+          {traceTask && (
+            <div style={{ fontSize: 13, marginBottom: 8 }}>
+              <b className="mono">{traceTask.matrix} / {traceTask.task}</b>
+              {!trace && !traceErr && <span style={{ color: 'var(--text-muted)' }}> 加载中…</span>}
+              {traceErr && <span style={{ color: 'var(--critical)' }}> {traceErr}</span>}
+            </div>
+          )}
+          {trace && (
+            <>
+              <div style={{ display: 'flex', gap: 2, marginBottom: 12, flexWrap: 'wrap' }}>
+                {trace.calls.map((c) => (
+                  <button
+                    key={`${c.tick}-${c.trace_id ?? ''}`}
+                    onClick={() => setTraceTick(trace.calls.indexOf(c))}
+                    title={`tick ${c.tick} · alpha ${c.applied_alpha} · ${c.latency_sec}s${c.fallback ? ` · fallback:${c.fallback}` : ''}`}
+                    style={{
+                      width: 13, height: 26, padding: 0, cursor: 'pointer', borderRadius: 3,
+                      border: trace.calls.indexOf(c) === traceTick ? '2px solid var(--text-primary)' : '1px solid var(--border)',
+                      background: c.fallback ? 'var(--critical)' : 'var(--series-1)',
+                      opacity: 0.35 + 0.65 * Math.min(c.applied_alpha / 400, 1),
+                    }}
+                  />
+                ))}
+              </div>
+              {(() => {
+                const c = trace.calls[traceTick]
+                if (!c) return null
+                return (
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+                        Tick {c.tick} · observation
+                      </div>
+                      <pre className="mono" style={{ whiteSpace: 'pre-wrap', background: 'var(--page)', border: '1px solid var(--grid)', borderRadius: 6, padding: 10, maxHeight: 240, overflow: 'auto', margin: 0, fontSize: 11 }}>
+                        {c.observation ? JSON.stringify(c.observation, null, 1) : '（无）'}
+                      </pre>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 6 }}>
+                        模型输出 → alpha = {c.applied_alpha}
+                        {c.fallback && <span style={{ color: 'var(--critical)', marginLeft: 8 }}>fallback: {c.fallback}</span>}
+                        <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: 8 }}>{c.latency_sec}s</span>
+                      </div>
+                      <pre className="mono" style={{ whiteSpace: 'pre-wrap', background: 'var(--page)', border: '1px solid var(--grid)', borderRadius: 6, padding: 10, maxHeight: 240, overflow: 'auto', margin: 0, fontSize: 11 }}>
+                        {c.error ? `⚠ ${c.error}\n\n` : ''}{c.raw_output || '（无输出）'}
+                      </pre>
+                      {c.trace_id && (
+                        <div className="mono" style={{ fontSize: 10, color: 'var(--text-muted)', marginTop: 4 }}>
+                          trace_id: {c.trace_id}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })()}
+            </>
+          )}
+        </div>
       </div>
 
       <footer style={{ marginTop: 28, color: 'var(--text-muted)', fontSize: 12 }}>

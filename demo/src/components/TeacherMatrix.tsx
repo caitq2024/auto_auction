@@ -37,7 +37,7 @@ function displayName(taskId: string): string {
   return NAME_LABELS[base] ?? base
 }
 
-export function TeacherMatrix({ boards }: { boards: HarnessBoard[] }) {
+export function TeacherMatrix({ boards, onPick }: { boards: HarnessBoard[]; onPick?: (matrix: string, task: string) => void }) {
   if (!boards.length) return null
   return (
     <div className="card">
@@ -66,7 +66,12 @@ export function TeacherMatrix({ boards }: { boards: HarnessBoard[] }) {
               </thead>
               <tbody>
                 {b.candidates.map((c, i) => (
-                  <tr key={c.task_id}>
+                  <tr
+                    key={c.task_id}
+                    onClick={() => onPick?.(b.matrix_id, c.task_id)}
+                    style={onPick ? { cursor: 'pointer' } : undefined}
+                    title={onPick ? '点击查看决策 trace' : undefined}
+                  >
                     <td style={{ color: 'var(--text-muted)' }}>{i + 1}</td>
                     <td>{displayName(c.task_id)}</td>
                     <td style={{ fontWeight: 600 }}>{c.score_mean?.toFixed(2)}</td>
