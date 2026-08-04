@@ -197,10 +197,18 @@ experiment_spec 按 model_id 前缀 `openai.` 自动路由到 Mantle 客户端�
 API key 通过任务的 env_extra 传入容器（注意：会出现在 SFN 执行历史里——claw 无
 secretsmanager 权限的当前折衷，后续可让账号 owner 建 secret + task role 读取）。
 
-**教师矩阵·官方数据版完整榜（9 模型 × 2ep × 500k PV × v2 prompt，同 seed 配对）**：
-sonnet-4.6 13.05 > haiku-4.5 11.91 > sonnet-5 7.27 > gpt-5.6-sol 5.78 >
-deepseek-r1 5.55 > opus-5 5.36 > gpt-5.6-terra 5.10 > gpt-5.6-luna 4.44 >
-nova-2-lite 2.08。
+**教师矩阵·官方数据版最终榜（token 修复后，9 模型 × 2ep × 500k PV × v2 prompt）**：
+haiku-4.5 11.91（0% fallback）> sonnet-5 7.83 > deepseek-r1 5.94 >
+gpt-5.6-sol 5.78 > gpt-5.6-terra 5.10 > gpt-5.6-luna 4.44 > nova-2-lite 2.08 >
+opus-5 1.22 > sonnet-4.6 1.03。
+
+**重要教训（trace 浏览器立功）**：初版榜单的"sonnet-4.6 第一（13.05）"是假的——
+它 48/48 决策全部 fallback（推理正确但 300 token 预算把 JSON 截断在末尾），
+分数实际是 fallback 链交出来的。修复分两轮：① 默认输出下限 300→1500（普通模型
+的 prose+JSON 需要）；② sonnet-5 也在 v2 prompt 下输出 reasoningContent，
+reasoning 名单扩为 fable-5/deepseek/opus-5/sonnet-5，预算 2500→4000。
+修复后全场 fallback 接近 0（deepseek 剩 12/30 属模型自身稳定性）。
+**榜单必须与 fallback 率一起读**——分数好可能只是兜底策略好。
 
 坑：
 - opus-5 在复杂 prompt 下会输出 reasoningContent 块（简单探测不会）——300 token
