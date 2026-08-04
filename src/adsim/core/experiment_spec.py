@@ -84,7 +84,7 @@ def run_task(task: MatrixTask) -> dict[str, Any]:
     slot = base.get("controlled_slot", 0)
     strategy = cand["strategy"]
 
-    if strategy == "llm":
+    if strategy in ("llm", "remote", "agentcore"):
         controlled = {slot: ("pid", {})}  # placeholder, agent injected below
     else:
         controlled = {slot: (strategy, cand.get("kwargs", {}))}
