@@ -208,10 +208,25 @@ nova-2-lite 2.08。
   （≥2500 token + 120s 超时）后重跑正常（5.36）；
 - 判断"模型是否 reasoning"必须用真实 prompt 探测，简单 probe 会误判。
 
-## 第 4 步（H3）：S3 产物 + Lambda 聚合
+## 第 4 步（H3）：S3 产物 + Lambda 聚合（2026-08-04 完成）
 
-（待做）计划：S3 事件触发 adsim-lambda-role 的 Lambda → 重新聚合 demo_data.json →
-写回 S3/前端数据位置。
+1. **Lambda**：`adsim-aggregator`（python3.12，512MB/120s，role=adsim-lambda-role，
+   代码 harness/aggregator/lambda_function.py，纯 stdlib 直接 zip 上传）。
+   逻辑：对触发到的 matrix_id，列出 matrix/<id>/*/task_result.json → 合并排名 →
+   写 leaderboards/<id>.json + 维护 leaderboards/index.json。
+2. **S3 事件触发**：bucket 通知（prefix=matrix/ suffix=task_result.json →
+   ObjectCreated → Lambda）；先 lambda add-permission（Principal s3.amazonaws.com、
+   SourceArn 限定本桶）再 put_bucket_notification_configuration。
+3. **前端接入**：export_demo.py 读 S3 leaderboards/ 拼进 demo_data.json 的
+   harness_leaderboards 字段；前端 TeacherMatrix 组件渲染（demo + Pages 自动更新）。
+
+验证：put 一个假 task_result.json → ~15s 后 leaderboards/ 出现对应 json（记得清理
+测试产物 + index）。
+
+坑：
+- put_bucket_notification 在 add-permission 后立即调用可能 InvalidArgument
+  （权限传播），等 1-2 分钟重试即好；
+- 排查触发问题看 filter_log_events（describe_log_streams 取"最新流"可能拿到旧流）。
 
 ## 第 5 步（H4）：Observability / AgentCore evals 接入
 
