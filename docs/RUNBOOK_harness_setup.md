@@ -184,6 +184,30 @@ python harness/agentcore/poc_run_agentcore.py --runtime-arn <ARN> --pv-num 50000
 - ECR 策略必须 FullAccess（PowerUser 缺 CreateRepository，本次又踩了一遍：策略
   曾被换回 PowerUser，建仓失败后换回 FullAccess）。
 
+## 第 3.5 步：官方数据流量 + GPT-5.6 接入（2026-08-04 完成）
+
+**官方数据 replay**：period CSV 上传 s3://<bucket>/data/official/；run_task.py 按
+base.replay_period_csvs 从 S3 按需下载（约 1-2 分钟/3.8GB）。episode i → 列表第 i 个 period。
+
+**GPT-5.6（sol/terra/luna）**：Bedrock 上不支持 InvokeModel/Converse，只能走
+Mantle endpoint 的 OpenAI Responses API（详见 EFS bedrock_gpt/call-bedrock-gpt skill）。
+MantleGptClient（llm_clients.py）处理：base_url = bedrock-mantle.<region>.api.aws/openai/v1、
+sol 自动选 us-east-1、瞬时 auth 失败重试、输出预算 2500（reasoning 花销）。
+experiment_spec 按 model_id 前缀 `openai.` 自动路由到 Mantle 客户端。
+API key 通过任务的 env_extra 传入容器（注意：会出现在 SFN 执行历史里——claw 无
+secretsmanager 权限的当前折衷，后续可让账号 owner 建 secret + task role 读取）。
+
+**教师矩阵·官方数据版完整榜（9 模型 × 2ep × 500k PV × v2 prompt，同 seed 配对）**：
+sonnet-4.6 13.05 > haiku-4.5 11.91 > sonnet-5 7.27 > gpt-5.6-sol 5.78 >
+deepseek-r1 5.55 > opus-5 5.36 > gpt-5.6-terra 5.10 > gpt-5.6-luna 4.44 >
+nova-2-lite 2.08。
+
+坑：
+- opus-5 在复杂 prompt 下会输出 reasoningContent 块（简单探测不会）——300 token
+  输出预算饿死 text 块 → 48/48 fallback 得 0 分。已加入 _REASONING_MARKERS
+  （≥2500 token + 120s 超时）后重跑正常（5.36）；
+- 判断"模型是否 reasoning"必须用真实 prompt 探测，简单 probe 会误判。
+
 ## 第 4 步（H3）：S3 产物 + Lambda 聚合
 
 （待做）计划：S3 事件触发 adsim-lambda-role 的 Lambda → 重新聚合 demo_data.json →
