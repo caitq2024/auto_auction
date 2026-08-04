@@ -15,6 +15,7 @@ COPY src ./src
 COPY third_party/AuctionNet/simul_bidding_env ./third_party/AuctionNet/simul_bidding_env
 COPY third_party/AuctionNet/LICENSE.txt ./third_party/AuctionNet/LICENSE.txt
 COPY harness/simulator/run_task.py ./harness/simulator/run_task.py
+COPY harness/agentcore/poc_run_agentcore.py ./harness/agentcore/poc_run_agentcore.py
 
 RUN pip install --no-cache-dir -e .
 

@@ -128,15 +128,39 @@ def run_task(task: MatrixTask) -> dict[str, Any]:
                             headers=cand.get("headers", {}))
         runner.agents[slot] = agent
         scenario.advertisers[slot].strategy = f"remote:{cand['endpoint_url']}"
+    elif strategy == "agentcore":
+        import sys as _sys
+        _sys.path.insert(0, str(Path(__file__).resolve().parents[3] / "harness" / "agentcore"))
+        from poc_run_agentcore import AgentCoreAgent
 
-    results = [runner.run_episode(ep) for ep in range(scenario.num_episode)]
+        agent = AgentCoreAgent(cand["runtime_arn"])
+        runner.agents[slot] = agent
+        scenario.advertisers[slot].strategy = f"agentcore:{cand['runtime_arn'].split('/')[-1]}"
+
+    results = []
+    all_records = []
+    for ep in range(scenario.num_episode):
+        results.append(runner.run_episode(ep))
+        if agent is not None and hasattr(agent, "trajectory"):
+            all_records.append((ep, list(agent.trajectory)))
     out_dir = Path(task.output_dir)
     write_run(out_dir, scenario, results, {"matrix_task": task.task_id})
     if agent is not None and hasattr(agent, "trajectory"):
         from dataclasses import asdict
         with open(out_dir / "trajectory_all.jsonl", "w") as f:
-            for t in agent.trajectory:
-                f.write(json.dumps(asdict(t)) + "\n")
+            for ep, recs in all_records:
+                for t in recs:
+                    f.write(json.dumps(asdict(t)) + "\n")
+        # H4: ship per-decision EMF traces to CloudWatch (best-effort)
+        try:
+            from adsim.storage.trace_export import export_episode_trace
+
+            for ep, recs in all_records:
+                export_episode_trace(
+                    recs, matrix_id=task.matrix_id, task_id=task.task_id,
+                    episode=ep, model_id=cand.get("model_id", strategy))
+        except Exception as e:
+            print(f"[trace_export] skipped: {type(e).__name__}: {e}")
 
     summaries = [r.summaries[slot] for r in results]
     scores = [s.score for s in summaries]
