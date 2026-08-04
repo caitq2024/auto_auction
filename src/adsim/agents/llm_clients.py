@@ -33,10 +33,15 @@ _REASONING_MARKERS = ("fable-5", "deepseek", "r1-v1", "opus-5")
 _REASONING_MIN_TOKENS = 2500
 
 
+_DEFAULT_MIN_TOKENS = 1500  # models often write prose before the JSON; a
+# 300-token budget truncates mid-JSON and silently drives every call to
+# fallback (bitten three times: fable-5, opus-5, sonnet-4.6)
+
+
 def _effective_max_tokens(model_id: str, requested: int) -> int:
     if any(m in model_id for m in _REASONING_MARKERS):
         return max(requested, _REASONING_MIN_TOKENS)
-    return requested
+    return max(requested, _DEFAULT_MIN_TOKENS)
 
 def _extract_text(resp: dict) -> str:
     """First text block from a Converse response. Reasoning models (deepseek-r1,
