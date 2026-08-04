@@ -47,6 +47,10 @@ def main() -> None:
     bucket = os.environ.get(
         "RESULTS_BUCKET", "adsim-experiments-651433607849")
     t = json.loads(task_raw)
+    # optional per-task env (e.g. OPENAI_API_KEY for Mantle GPT models);
+    # applied before any client construction
+    for k, v in (t.pop("env_extra", None) or {}).items():
+        os.environ.setdefault(k, v)
     _fetch_replay_data(t.get("base", {}), bucket)
     task = MatrixTask(
         matrix_id=t["matrix_id"], task_id=t["task_id"],

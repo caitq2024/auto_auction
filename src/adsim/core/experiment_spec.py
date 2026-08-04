@@ -106,9 +106,12 @@ def run_task(task: MatrixTask) -> dict[str, Any]:
     if strategy == "llm":
         from adsim.agents.llm import (LLMAgentConfig, LLMBidAgent,
                                       PROMPT_TEMPLATES)
-        from adsim.agents.llm_clients import BedrockClient
+        from adsim.agents.llm_clients import BedrockClient, MantleGptClient
 
-        client = BedrockClient(model_id=cand["model_id"])
+        if cand["model_id"].startswith("openai."):
+            client = MantleGptClient(model_id=cand["model_id"])
+        else:
+            client = BedrockClient(model_id=cand["model_id"])
         tmpl = cand.get("prompt_template")
         agent = LLMBidAgent(
             client,

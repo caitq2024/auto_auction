@@ -1,0 +1,28 @@
+# 教师扩样·官方数据版·GPT 增补（2026-08-04）：gpt-5.6 terra/luna/sol 三个型号,
+# 与 teacher_matrix_official_v1 完全同口径（500k PV 官方流量在线回放、2ep、v2 prompt、同 seed）。
+# sol 仅 us-east-1/2 可用——MantleGptClient 自动为 sol 选 us-east-1。
+matrix_id: teacher_matrix_official_v1   # 同一矩阵目录，结果并入
+base:
+  pv_num: 500000
+  episodes: 2
+  controlled_slot: 0
+  traffic_type: replay
+  replay_period_csvs: [data/official/period-7.csv, data/official/period-8.csv]
+seeds: [1]
+candidates:
+  - name: gpt56terra
+    strategy: llm
+    model_id: openai.gpt-5.6-terra
+    prompt_template: v2
+    max_alpha: 2000
+  - name: gpt56luna
+    strategy: llm
+    model_id: openai.gpt-5.6-luna
+    prompt_template: v2
+    max_alpha: 2000
+  - name: gpt56sol
+    strategy: llm
+    model_id: openai.gpt-5.6-sol
+    prompt_template: v2
+    max_alpha: 2000
+output_root: outputs/matrix

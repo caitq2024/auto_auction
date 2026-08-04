@@ -186,3 +186,82 @@ class BearerTokenClient:
                     ) from None  # never chain the raw error (it may echo headers)
                 raise RuntimeError(f"Bedrock HTTP {e.code}") from None
         raise RuntimeError(f"Bedrock capacity error after retries: {last_err}")
+
+
+class MantleGptClient:
+    """GPT-5.6 (sol/terra/luna) via Bedrock Mantle Responses API.
+
+    NOT bedrock-runtime: only https://bedrock-mantle.<region>.api.aws/openai/v1
+    /responses works for these models (InvokeModel/Converse/ChatCompletions all
+    fail). Auth is a long-lived Bedrock API key (env OPENAI_API_KEY or
+    AWS_BEARER_TOKEN_BEDROCK). sol is us-east-1/2 only; terra/luna also us-west-2.
+    """
+
+    def __init__(
+        self,
+        model_id: str = "openai.gpt-5.6-terra",
+        region: str | None = None,
+        api_key: str | None = None,
+        max_tokens: int = 2500,   # gpt-5.6 spends output budget on reasoning
+        timeout_sec: float = 120.0,
+    ):
+        import os
+
+        self.model_id = model_id
+        if region is None:
+            region = "us-east-1" if model_id.endswith("-sol") else "us-west-2"
+        self.region = region
+        self._key = (api_key or os.environ.get("OPENAI_API_KEY")
+                     or os.environ.get("AWS_BEARER_TOKEN_BEDROCK", "")).strip()
+        if not self._key:
+            raise ValueError("Mantle API key missing (OPENAI_API_KEY / AWS_BEARER_TOKEN_BEDROCK)")
+        self.max_tokens = max_tokens
+        self.timeout_sec = timeout_sec
+        self.total_input_tokens = 0
+        self.total_output_tokens = 0
+        self.calls = 0
+
+    def __call__(self, prompt: str) -> str:
+        import json
+        import time as _time
+        import urllib.error
+        import urllib.request
+
+        body = json.dumps({"model": self.model_id, "input": prompt,
+                           "max_output_tokens": self.max_tokens}).encode()
+        url = f"https://bedrock-mantle.{self.region}.api.aws/openai/v1/responses"
+        last_err: Exception | None = None
+        for attempt in range(4):
+            req = urllib.request.Request(
+                url, data=body, method="POST",
+                headers={"Authorization": f"Bearer {self._key}",
+                         "Content-Type": "application/json"})
+            try:
+                with urllib.request.urlopen(req, timeout=self.timeout_sec) as r:
+                    d = json.loads(r.read())
+                u = d.get("usage", {})
+                self.total_input_tokens += u.get("input_tokens", 0)
+                self.total_output_tokens += u.get("output_tokens", 0)
+                self.calls += 1
+                texts = [c["text"] for o in d.get("output", [])
+                         if o.get("type") == "message"
+                         for c in o.get("content", []) if c.get("type") == "output_text"]
+                if texts:
+                    return texts[0]
+                if d.get("output_text"):
+                    return d["output_text"]
+                raise RuntimeError("mantle response had no output_text")
+            except urllib.error.HTTPError as e:
+                if e.code in (401, 403):
+                    # skill notes: transient auth failures happen — retry once
+                    if attempt == 0:
+                        last_err = e
+                        _time.sleep(2)
+                        continue
+                    raise PermissionError("Mantle API key invalid/region mismatch") from None
+                if e.code in (429, 500, 503):
+                    last_err = e
+                    _time.sleep(2 ** attempt)
+                    continue
+                raise RuntimeError(f"Mantle HTTP {e.code}") from None
+        raise RuntimeError(f"Mantle error after retries: {last_err}")
