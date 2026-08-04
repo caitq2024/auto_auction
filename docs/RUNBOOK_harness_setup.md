@@ -47,6 +47,9 @@ Trusted entity type 选 **AWS service** → Use case 下拉里：
   BedrockAgentCoreFullAccess
 - `adsim-lambda-role`：选 **Lambda**。附加策略：AWSLambdaBasicExecutionRole +
   AWSStepFunctionsFullAccess + AmazonS3FullAccess
+- `adsim-sfn-role`：选 **Step Functions**（Use case 搜 "Step Functions"）。附加策略：
+  AmazonECS_FullAccess + CloudWatchEventsFullAccess（runTask.sync 需要 events 权限来
+  监听任务结束）+ 上面同款 adsim-passrole inline policy（把 adsim-task-role 传给 ECS）
 
 如果建时选错了 use case（例如默认 EC2），事后修复：角色页 → Trust relationships →
 Edit trust policy，Principal.Service 改成 `ecs-tasks.amazonaws.com`（task role）/
@@ -141,18 +144,45 @@ python harness/agentcore/poc_run_agentcore.py --runtime-arn <ARN> --pv-num 50000
 - CodeZip 选 PYTHON_3_14（toolkit 用本机 uv 装的依赖是 py314/aarch64）；
 - `agentcore deploy`（CDK 路线）需要 cloudformation:*，没有就走上面的直接 API 路线。
 
-## 第 3 步（H2）：模拟器容器化 + Step Functions 矩阵编排
+## 第 3 步（H2）：模拟器容器化 + Step Functions 矩阵编排（已完成 2026-08-04）
 
-（进行中，边做边记）
+1. **容器**：harness/simulator/Dockerfile（py311-slim + adsim + upstream simul_bidding_env
+   只读拷贝 + torch CPU）；入口 harness/simulator/run_task.py——读环境变量 TASK_JSON
+   （单个 MatrixTask），跑模拟，产物上传 s3://<bucket>/matrix/<matrix_id>/<task_id>/。
+   本地验证：`docker build -f harness/simulator/Dockerfile -t adsim-simulator .` 后
+   `docker run -e TASK_JSON='{...pid 5k pv...}'`（S3 上传在本地会因无凭证失败，属预期）。
 
-计划：
-1. Dockerfile：py311 + adsim + upstream 只读拷贝；入口 `python -m adsim.harness.run_task`
-   （读单个 MatrixTask JSON：跑模拟 → 产物上传 S3）；
-2. 推 ECR：`aws ecr create-repository --repository-name adsim-simulator` + docker push；
-3. ECS 集群（Fargate）+ 任务定义（4 vCPU / 8GB，taskRole=adsim-task-role）；
-4. Step Functions 状态机：输入 ExperimentSpec → Map 状态并发跑任务（ecs:runTask.sync）；
-5. 首个用例：教师扩样 6 模型 × 2 episodes（haiku-4.5 / sonnet-4.6 / sonnet-5 /
-   opus-5 / deepseek-r1 / nova-2-lite）。
+2. **ECR**：
+   ```bash
+   aws ecr create-repository --repository-name adsim-simulator --region us-west-2
+   aws ecr get-login-password --region us-west-2 | docker login --username AWS \
+     --password-stdin <ACCOUNT>.dkr.ecr.us-west-2.amazonaws.com
+   docker tag adsim-simulator:latest <ACCOUNT>.dkr.ecr.us-west-2.amazonaws.com/adsim-simulator:latest
+   docker push <ACCOUNT>.dkr.ecr.us-west-2.amazonaws.com/adsim-simulator:latest
+   ```
+
+3. **ECS**：集群 `adsim-harness`；任务定义 `adsim-simulator`（FARGATE，4 vCPU/8GB，
+   execution/taskRole 都是 adsim-task-role，awslogs → /ecs/adsim-simulator）；网络用
+   默认 VPC 子网 + assignPublicIp=ENABLED（公网拉镜像/调 Bedrock）。
+   单任务冒烟：ecs.run_task(...) → exit 0，S3 产物 6 个文件齐全。
+
+4. **Step Functions**：状态机 `adsim-matrix`（STANDARD，role=adsim-sfn-role）——
+   输入 {"tasks":[MatrixTask…]}，Map 状态 MaxConcurrency=12，每项
+   `ecs:runTask.sync` 拉一个 Fargate 任务，TASK_JSON 用
+   `States.JsonToString($)` 注入容器环境变量；TaskFailed 重试 1 次。
+
+5. **首个用例**：teacher_matrix_v1（configs/experiments/teacher_matrix_v1.yaml，
+   6 模型 × 2ep × 500k PV × v2 prompt）。提交方式：本地读 spec → tasks JSON →
+   `sfn.start_execution`。执行名 teacher-matrix-v1-run1。
+
+坑：
+- Step Functions 需要独立执行角色 adsim-sfn-role（trust=states.amazonaws.com；
+  AmazonECS_FullAccess + CloudWatchEventsFullAccess——runTask.sync 靠 EventBridge
+  感知任务结束；inline PassRole 只需点名 adsim-task-role）；
+- 容器 overrides 传参用 States.JsonToString($) 把 Map 项整体注入 TASK_JSON，
+  避免逐字段映射；
+- ECR 策略必须 FullAccess（PowerUser 缺 CreateRepository，本次又踩了一遍：策略
+  曾被换回 PowerUser，建仓失败后换回 FullAccess）。
 
 ## 第 4 步（H3）：S3 产物 + Lambda 聚合
 

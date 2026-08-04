@@ -1,0 +1,41 @@
+# 教师扩样 v1（用户确认 2026-08-04）：6 模型 × 2 episodes，同 seed 配对，
+# 500k PV，v2 pacing prompt。官方榜口径（简易流量 + 在线模拟）。
+matrix_id: teacher_matrix_v1
+base:
+  pv_num: 500000
+  episodes: 2
+  controlled_slot: 0
+  traffic_type: parametric
+seeds: [1]
+candidates:
+  - name: haiku45
+    strategy: llm
+    model_id: us.anthropic.claude-haiku-4-5-20251001-v1:0
+    prompt_template: v2
+    max_alpha: 2000
+  - name: sonnet46
+    strategy: llm
+    model_id: global.anthropic.claude-sonnet-4-6
+    prompt_template: v2
+    max_alpha: 2000
+  - name: sonnet5
+    strategy: llm
+    model_id: global.anthropic.claude-sonnet-5
+    prompt_template: v2
+    max_alpha: 2000
+  - name: opus5
+    strategy: llm
+    model_id: global.anthropic.claude-opus-5
+    prompt_template: v2
+    max_alpha: 2000
+  - name: deepseekr1
+    strategy: llm
+    model_id: us.deepseek.r1-v1:0
+    prompt_template: v2
+    max_alpha: 2000
+  - name: nova2lite
+    strategy: llm
+    model_id: global.amazon.nova-2-lite-v1:0
+    prompt_template: v2
+    max_alpha: 2000
+output_root: outputs/matrix
