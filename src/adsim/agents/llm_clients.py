@@ -22,6 +22,11 @@ SELF_SERVE_MODELS = {
     "claude-opus-5": ("global.anthropic.claude-opus-5", 5.0, 25.0),
     "nova-2-lite": ("global.amazon.nova-2-lite-v1:0", 0.06, 0.24),
     "deepseek-r1": ("us.deepseek.r1-v1:0", 1.35, 5.4),
+    # GPT-5.6 via Bedrock Mantle (Responses API); official prices not
+    # published — None = frontend shows no price/cost estimate
+    "gpt-5.6-sol": ("openai.gpt-5.6-sol", None, None),
+    "gpt-5.6-terra": ("openai.gpt-5.6-terra", None, None),
+    "gpt-5.6-luna": ("openai.gpt-5.6-luna", None, None),
 }
 
 _NO_TEMPERATURE_MARKERS = ("opus-4-8", "opus-5", "sonnet-5", "fable-5")

@@ -5,8 +5,8 @@ const API = import.meta.env.VITE_API_BASE ?? '/api'
 interface ModelInfo {
   key: string
   model_id: string
-  price_in_per_1m: number
-  price_out_per_1m: number
+  price_in_per_1m: number | null
+  price_out_per_1m: number | null
 }
 
 import type { TickSeries } from '../lib/types'
@@ -198,7 +198,9 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
           >
             {models.map((m) => (
               <option key={m.key} value={m.key}>
-                {m.key}（${m.price_in_per_1m}/${m.price_out_per_1m} per 1M tok）
+                {m.price_in_per_1m != null
+                  ? `${m.key}（$${m.price_in_per_1m}/$${m.price_out_per_1m} per 1M tok）`
+                  : `${m.key}（价格未公布）`}
               </option>
             ))}
           </select>
@@ -331,9 +333,15 @@ export function RunExperiment({ onResult }: { onResult?: (r: ExperimentResult) =
         {selected && !taskId && (
           <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
             预计 LLM 调用 <b>{episodes * 48} 次</b>（每时段 1 次 × 48 时段 × {episodes} episode，与
-            PV 规模无关）· 成本 ≈ $
-            {(((episodes * 48 * 550) / 1e6) * selected.price_in_per_1m + ((episodes * 48 * 300) / 1e6) * selected.price_out_per_1m).toFixed(3)}
-            （按 ~550 in / ~300 out tok/次）· 时长 ≈ LLM {episodes * 3}–{episodes * 7} 分钟 + 模拟
+            PV 规模无关）
+            {selected.price_in_per_1m != null && selected.price_out_per_1m != null && (
+              <>
+                {' '}· 成本 ≈ $
+                {(((episodes * 48 * 550) / 1e6) * selected.price_in_per_1m + ((episodes * 48 * 300) / 1e6) * selected.price_out_per_1m).toFixed(3)}
+                （按 ~550 in / ~300 out tok/次）
+              </>
+            )}
+            {' '}· 时长 ≈ LLM {episodes * 3}–{episodes * 7} 分钟 + 模拟
             {' '}{Math.ceil((pvNum / 500000) * 6 * episodes)} 分钟
           </span>
         )}
