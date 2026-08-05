@@ -197,10 +197,13 @@ experiment_spec 按 model_id 前缀 `openai.` 自动路由到 Mantle 客户端�
 API key 通过任务的 env_extra 传入容器（注意：会出现在 SFN 执行历史里——claw 无
 secretsmanager 权限的当前折衷，后续可让账号 owner 建 secret + task role 读取）。
 
-**教师矩阵·官方数据版最终榜（token 修复后，9 模型 × 2ep × 500k PV × v2 prompt）**：
-haiku-4.5 11.91（0% fallback）> sonnet-5 7.83 > deepseek-r1 5.94 >
-gpt-5.6-sol 5.78 > gpt-5.6-terra 5.10 > gpt-5.6-luna 4.44 > nova-2-lite 2.08 >
-opus-5 1.22 > sonnet-4.6 1.03。
+**教师矩阵·官方数据版最终定稿（全部候选在修复镜像上重跑，2026-08-05）**：
+haiku-4.5 11.91（0/48 fallback，全场唯一 <100% 预算 + CPA 相对可控）>
+sonnet-5 7.83 > deepseek-r1 5.94 > gpt-5.6-sol 4.87 > gpt-5.6-terra 3.53 >
+gpt-5.6-luna 2.23 > nova-2-lite 2.08 > opus-5 1.22 > sonnet-4.6 1.03。
+GPT 三兄弟重跑后轨迹完整（此前 luna 只有 41/96 条记录），分数略降但
+sol > terra > luna 的型号排序不变；教师选型结论：**haiku-4.5**（干净、稳定、
+便宜），备选 sonnet-5（量大但 CPA 需 prompt 层约束）。
 
 **重要教训（trace 浏览器立功）**：初版榜单的"sonnet-4.6 第一（13.05）"是假的——
 它 48/48 决策全部 fallback（推理正确但 300 token 预算把 JSON 截断在末尾），
