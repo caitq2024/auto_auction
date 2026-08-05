@@ -89,7 +89,10 @@ def _first_json_object(raw: str) -> dict:
 def invoke(payload, context):
     observation = payload.get("observation", {})
     prompt = f"{SYSTEM_PROMPT}\n\nCurrent state:\n{json.dumps(observation)}"
-    infer = {"maxTokens": 300}
+    # prose+JSON needs headroom; reasoning models need much more
+    # (three starvation incidents: fable-5/opus-5/sonnet-4.6 — see runbook)
+    _reasoning = any(m in MODEL_ID for m in ("fable-5", "deepseek", "r1-v1", "opus-5", "sonnet-5"))
+    infer = {"maxTokens": 4000 if _reasoning else 1500}
     if not any(m in MODEL_ID for m in _NO_TEMPERATURE):
         infer["temperature"] = 0.2
     resp = _bedrock.converse(

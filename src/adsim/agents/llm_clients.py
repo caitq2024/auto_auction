@@ -60,7 +60,7 @@ class BedrockClient:
         self,
         model_id: str = "us.anthropic.claude-haiku-4-5-20251001-v1:0",
         region: str = "us-west-2",
-        max_tokens: int = 300,
+        max_tokens: int = 1500,
         temperature: float | None = 0.2,
         timeout_sec: float = 30.0,
     ):
@@ -133,7 +133,7 @@ class BearerTokenClient:
         model_id: str,
         api_key: str,
         region: str = "us-west-2",
-        max_tokens: int = 300,
+        max_tokens: int = 1500,
         temperature: float | None = 0.2,
         timeout_sec: float = 60.0,
     ):

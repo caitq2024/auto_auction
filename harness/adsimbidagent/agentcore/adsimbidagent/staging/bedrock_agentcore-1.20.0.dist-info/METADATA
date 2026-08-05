@@ -1,6 +1,6 @@
 Metadata-Version: 2.4
 Name: bedrock-agentcore
-Version: 1.19.0
+Version: 1.20.0
 Summary: An SDK for using Bedrock AgentCore
 Project-URL: Homepage, https://github.com/aws/bedrock-agentcore-sdk-python
 Project-URL: Bug Tracker, https://github.com/aws/bedrock-agentcore-sdk-python/issues
@@ -35,8 +35,14 @@ Provides-Extra: a2a-v1
 Requires-Dist: a2a-sdk[http-server]<2.0,>=1.0.1; extra == 'a2a-v1'
 Provides-Extra: ag-ui
 Requires-Dist: ag-ui-protocol>=0.1.10; extra == 'ag-ui'
+Provides-Extra: autoevals
+Requires-Dist: autoevals<1.0.0,>=0.3.0; extra == 'autoevals'
+Requires-Dist: strands-agents-evals<2.0.0,>=1.0.3; extra == 'autoevals'
 Provides-Extra: datasets
 Requires-Dist: requests>=2.31.0; extra == 'datasets'
+Provides-Extra: deepeval
+Requires-Dist: deepeval<5.0.0,>=3.5.0; extra == 'deepeval'
+Requires-Dist: strands-agents-evals<2.0.0,>=1.0.3; extra == 'deepeval'
 Provides-Extra: langgraph
 Requires-Dist: httpx>=0.27.0; extra == 'langgraph'
 Requires-Dist: langchain-mcp-adapters>=0.1.0; extra == 'langgraph'
@@ -44,12 +50,12 @@ Requires-Dist: langchain>=1.0.0; extra == 'langgraph'
 Requires-Dist: langgraph>=1.0.0; extra == 'langgraph'
 Provides-Extra: simulation
 Requires-Dist: jinja2>=3.1.0; extra == 'simulation'
-Requires-Dist: strands-agents-evals>=0.1.0; extra == 'simulation'
+Requires-Dist: strands-agents-evals<2.0.0,>=1.0.3; extra == 'simulation'
 Provides-Extra: strands-agents
 Requires-Dist: mcp<2.0.0,>=1.23.0; extra == 'strands-agents'
 Requires-Dist: strands-agents>=1.20.0; extra == 'strands-agents'
 Provides-Extra: strands-agents-evals
-Requires-Dist: strands-agents-evals>=0.1.0; extra == 'strands-agents-evals'
+Requires-Dist: strands-agents-evals<2.0.0,>=1.0.3; extra == 'strands-agents-evals'
 Description-Content-Type: text/markdown
 
 <div align="center">
@@ -100,6 +106,8 @@ from strands import Agent # or bring your agent.
 @app.entrypoint
 async def handler(request):
     prompt = request.get("prompt")
+    if not isinstance(prompt, str):
+        raise ValueError("prompt must be a string")
 
     agent = Agent()
 
@@ -108,6 +116,9 @@ async def handler(request):
 
 app.run()
 ```
+
+Validate agent input before forwarding it to an agent framework. Keep prompts typed as strings and pass only prompt
+text to the agent.
 
 **What you get with Bedrock AgentCore:**
 - ✅ **Keep your agent logic** - Works with Strands, LangGraph, CrewAI, Autogen, or custom frameworks

@@ -669,6 +669,15 @@ def serve(
     # Define request handler
 
     def sock_handler(sock: socket.socket, addr: Any) -> None:
+        """
+        Handle the lifecycle of a WebSocket connection.
+
+        Since this function doesn't have a caller that can handle exceptions,
+        it attempts to log relevant ones.
+
+        It guarantees that the TCP connection is closed before exiting.
+
+        """
         # Calculate timeouts on the TLS and WebSocket handshakes.
         # The TLS timeout must be set on the socket, then removed
         # to avoid conflicting with the WebSocket timeout in handshake().
@@ -777,7 +786,7 @@ def serve(
 
     # Initialize server
 
-    # The `server` variable is captured by the closure of conn_handler().
+    # The server variable is captured by the closure of sock_handler().
     server = Server(sock, sock_handler, logger)
     return server
 
