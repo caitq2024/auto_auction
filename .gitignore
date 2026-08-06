@@ -8,3 +8,6 @@ outputs/**/*.parquet
 *.egg-info/
 data/official/
 demo/server/certs/
+harness/adsimbidagent/agentcore/adsimbidagent/staging/
+harness/adsimbidagent/agentcore/*.zip
+harness/adsimbidagent/agentcore/cdk/cdk.out/

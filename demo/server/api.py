@@ -323,10 +323,18 @@ def _run_experiment_body(req: ExperimentRequest, key: str, t) -> None:
     total_calls = 48 * req.episodes
     if True:
         model_id = SELF_SERVE_MODELS[req.model][0]
-        if key:
+        if model_id.startswith("openai."):
+            # GPT-5.6 rides Bedrock Mantle (Responses API) — Converse paths
+            # 400 on these models. User key if given, else server env key
+            # (courtesy path; owner pays).
+            from adsim.agents.llm_clients import MantleGptClient
+
+            client = MantleGptClient(model_id=model_id, api_key=key or None)
+        elif key:
             client = BearerTokenClient(model_id=model_id, api_key=key)
         else:  # PUBLIC_DEMO courtesy path: instance IAM role, owner pays
             from adsim.agents.llm_clients import BedrockClient
+
             client = BedrockClient(model_id=model_id)
 
         # preflight: fail fast on bad key / missing model access, instead of
