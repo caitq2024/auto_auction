@@ -10,7 +10,9 @@ import type { Candidate, DemoData } from './lib/types'
 // categorical slots 1-3 (validated); LLM strategies get slot-4 yellow with
 // direct labels/legend always present as the secondary channel
 // baseline series colors; violet #4a3aa7 is RESERVED for user experiments
-const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4']
+// 7 slots from the validated 8-hue palette (violet #4a3aa7 stays reserved
+// for user experiments); board now has 7 strategy families — no modulo reuse
+const SERIES = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#008300', '#e34948']
 
 export default function App() {
   const [data, setData] = useState<DemoData | null>(null)
