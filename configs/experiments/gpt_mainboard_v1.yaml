@@ -1,0 +1,16 @@
+# GPT-5.6 terra 进主榜（2026-08-06）：与主榜其他候选完全同口径——
+# 500k PV 参数化流量（论文标准市场）、seed 1、2 episodes、v1 prompt。
+matrix_id: gpt_mainboard_v1
+base:
+  pv_num: 500000
+  episodes: 2
+  controlled_slot: 0
+  traffic_type: parametric
+seeds: [1]
+candidates:
+  - name: gpt56terra
+    strategy: llm
+    model_id: openai.gpt-5.6-terra
+    prompt_template: v1
+    max_alpha: 2000
+output_root: outputs/matrix

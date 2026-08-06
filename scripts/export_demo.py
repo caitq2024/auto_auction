@@ -45,6 +45,7 @@ LLM_INTO_LEADERBOARD = {
         ("outputs/llm_baseline_haiku_500k", "LLM Haiku 4.5"),
         ("outputs/llm_baseline_opus48_500k", "LLM Opus 4.8"),
         ("outputs/llm_baseline_opus48_500k_v2", "LLM Opus 4.8 · prompt v2 (pacing)"),
+        ("outputs/matrix/gpt_mainboard_v1/gpt56terra_s1", "LLM GPT-5.6 Terra · prompt v1"),
     ],
     "midscale_50k": [
         ("outputs/llm_baseline_haiku_v3", "LLM Haiku 4.5"),

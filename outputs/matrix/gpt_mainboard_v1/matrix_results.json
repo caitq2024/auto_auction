@@ -1,0 +1,25 @@
+[
+  {
+    "task_id": "gpt56terra_s1",
+    "score_mean": 17.9674,
+    "episodes": [
+      {
+        "episode": 0,
+        "score": 29.0,
+        "conversions": 29.0,
+        "cost": 2899.97,
+        "actual_cpa": 100.0,
+        "budget_utilization": 1.0
+      },
+      {
+        "episode": 1,
+        "score": 6.9348,
+        "conversions": 18.0,
+        "cost": 2899.96,
+        "actual_cpa": 161.11,
+        "budget_utilization": 1.0
+      }
+    ],
+    "output_dir": "outputs/matrix/gpt_mainboard_v1/gpt56terra_s1"
+  }
+]

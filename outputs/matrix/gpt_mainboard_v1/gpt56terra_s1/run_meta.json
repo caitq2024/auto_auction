@@ -1,0 +1,11 @@
+{
+  "scenario_id": "gpt_mainboard_v1_gpt56terra_s1",
+  "seed": 1,
+  "episodes": 2,
+  "wall_time_sec": [
+    369.67,
+    392.87
+  ],
+  "internal_commit": "07add07263f58282d53bac23f582f261893e1245",
+  "matrix_task": "gpt56terra_s1"
+}
