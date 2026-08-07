@@ -54,6 +54,12 @@ LLM_INTO_LEADERBOARD = {
 }
 
 LLM_RUNS = {
+    "gpt56terra_500k_v1": {
+        "dir": "outputs/matrix/gpt_mainboard_v1/gpt56terra_s1",
+        "label": "GPT-5.6 Terra · prompt v1 · 500k",
+        "model": "openai.gpt-5.6-terra",
+        "pv_num": 500000,
+    },
     "haiku_500k": {
         "dir": "outputs/llm_baseline_haiku_500k",
         "label": "Claude Haiku 4.5 · 500k 市场",
@@ -160,12 +166,37 @@ def _build_candidate(raw_name: str, display: str, s: pd.DataFrame, t: pd.DataFra
     }
 
 
+def _episode_call_groups(base: Path) -> list[tuple[int, list[dict]]]:
+    """Per-episode call lists from either trajectory_ep{N}.jsonl files or a
+    combined trajectory_all.jsonl (matrix artifact; episodes are concatenated,
+    tick resets mark boundaries)."""
+    groups = []
+    ep_files = sorted(base.glob("trajectory_ep*.jsonl"))
+    if ep_files:
+        for f in ep_files:
+            groups.append((int(f.stem.replace("trajectory_ep", "")),
+                           [json.loads(l) for l in f.open()]))
+        return groups
+    all_file = base / "trajectory_all.jsonl"
+    if all_file.exists():
+        calls = [json.loads(l) for l in all_file.open()]
+        cur, ep = [], 0
+        last_tick = -1
+        for c in calls:
+            if c["tick"] <= last_tick and cur:
+                groups.append((ep, cur))
+                cur, ep = [], ep + 1
+            cur.append(c)
+            last_tick = c["tick"]
+        if cur:
+            groups.append((ep, cur))
+    return groups
+
+
 def export_llm_run(key: str, cfg: dict) -> dict:
     base = ROOT / cfg["dir"]
     episodes = []
-    for traj_file in sorted(base.glob("trajectory_ep*.jsonl")):
-        ep = int(traj_file.stem.replace("trajectory_ep", ""))
-        calls = [json.loads(line) for line in traj_file.open()]
+    for ep, calls in _episode_call_groups(base):
         episodes.append({
             "episode": ep,
             "calls": [{
